@@ -1,0 +1,18 @@
+UNITS=INCH
+#Layer_Color=32768
+#
+#Feature symbol names
+#
+$0 r2.2
+
+#
+#Feature attribute names
+#
+
+#
+#Layer features
+#
+L 0.1 2 0.1 2.1249999 0 P 0
+L 0.15 -0.125 0.15 0 0 P 0
+L 0.75 -0.125 0.75 0 0 P 0
+L 0.8 2 0.8 2.1249999 0 P 0
