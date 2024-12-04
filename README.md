@@ -3,6 +3,9 @@
 Adafruit Feather compatible embedded Linux board based on the Allwinner T113-S3 
 SoC with 128MB DDR3 built-in. 
 
+## Software
+Follow the development of our [buildroot Linux.](https://github.com/phyx-be/buildroot-tess)
+
 ## Blockdiagram
 TESS is designed to be a breakout board for the Allwinner T113-S3 with limited features on the board but maximal flexibility.
 ![TESS 00 Blockdiagram](media/TESS_Block.png)
