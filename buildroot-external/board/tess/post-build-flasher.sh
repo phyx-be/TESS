@@ -5,13 +5,13 @@
 # (esp32c3/build.sh, make esp32c3) for it to flash.
 #
 # Both must be built first. The main image defaults to
-# output/images/sdcard.img in this external tree (TESS_MAIN_IMAGE), the
+# output-main/images/sdcard.img in this external tree (TESS_MAIN_IMAGE), the
 # firmware to output-esp32c3/ (TESS_ESP32C3_O).
 
 set -eu
 
 TESS_DIR=$(cd "$(dirname "$0")/../.." && pwd)
-IMG="${TESS_MAIN_IMAGE:-${TESS_DIR}/output/images/sdcard.img}"
+IMG="${TESS_MAIN_IMAGE:-${TESS_DIR}/output-main/images/sdcard.img}"
 DEST="${TARGET_DIR}/usr/share/tess"
 FW_DIR="${TESS_ESP32C3_O:-${TESS_DIR}/output-esp32c3}"
 FW_DEST="${TARGET_DIR}/lib/firmware/esp-hosted"

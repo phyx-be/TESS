@@ -15,7 +15,7 @@
 #   BUILDROOT    Buildroot tree with the esp-hosted package, default: the
 #                buildroot checkout next to this external tree
 #   O            Buildroot output directory (to download the esp-hosted
-#                tarball), default: output next to this external tree
+#                tarball), default: output-main in this external tree
 #   ESP_WORKDIR  work directory, kept between builds (ESP-IDF checkout)
 #                default: ~/.cache/tess-esp32c3
 #   BR2_DL_DIR   Buildroot download directory, default: ~/br-dl
@@ -34,7 +34,7 @@ set -eu
 BOARD_DIR=$(cd "$(dirname "$0")" && pwd)
 TESS_DIR=$(cd "${BOARD_DIR}/.." && pwd)
 TOPDIR="${BUILDROOT:-${TESS_DIR}/buildroot}"
-O="${O:-${TESS_DIR}/output}"
+O="${O:-${TESS_DIR}/output-main}"
 OUT_DIR="${TESS_ESP32C3_O:-${TESS_DIR}/output-esp32c3}"
 WORKDIR="${ESP_WORKDIR:-${HOME}/.cache/tess-esp32c3}"
 DL_DIR="${BR2_DL_DIR:-${HOME}/br-dl}"

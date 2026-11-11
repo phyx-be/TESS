@@ -1,6 +1,6 @@
 # Tess images, built with Buildroot from this external tree:
 #
-#   make flasher   the main image in output/, then the flasher image in
+#   make flasher   the main image in output-main/, then the flasher image in
 #                  output-flasher/, which embeds it (the default target)
 #   make main      only the main image
 #   make flash     boot the flasher image over USB (FEL), see flash.sh
@@ -8,7 +8,7 @@
 #                  the flasher image embeds and flashes; build it before
 #                  the flasher (esp32c3/build.sh, ESP-IDF in Docker)
 #   make <target>  any other target goes to Buildroot for the build in O
-#                  (default: output, the main image), e.g.
+#                  (default: output-main, the main image), e.g.
 #                  make menuconfig, make O=output-flasher linux-rebuild
 #
 # BUILDROOT, MAIN_O, FLASHER_O and ESP32C3_O override the Buildroot tree
@@ -17,7 +17,7 @@
 
 TESS_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 BUILDROOT ?= $(TESS_DIR)/buildroot
-MAIN_O ?= $(TESS_DIR)/output
+MAIN_O ?= $(TESS_DIR)/output-main
 FLASHER_O ?= $(TESS_DIR)/output-flasher
 ESP32C3_O ?= $(TESS_DIR)/output-esp32c3
 
@@ -73,11 +73,11 @@ esp32c3:
 	BUILDROOT=$(BUILDROOT) O=$(MAIN_O) TESS_ESP32C3_O=$(ESP32C3_O) $(TESS_DIR)/esp32c3/build.sh
 
 help:
-	@echo "make flasher      main image (output/) then flasher image (output-flasher/)"
+	@echo "make flasher      main image (output-main/) then flasher image (output-flasher/)"
 	@echo "make main         main image only"
 	@echo "make flash        boot the flasher image over USB (FEL)"
 	@echo "make esp32c3      ESP32-C3 esp-hosted firmware in output-esp32c3/ (ESP-IDF in Docker)"
-	@echo "make <target>     Buildroot target for the build in O (default: output),"
+	@echo "make <target>     Buildroot target for the build in O (default: output-main),"
 	@echo "                  e.g. make menuconfig, make O=output-flasher linux-rebuild"
 	@echo "make O=... help   Buildroot's own help"
 

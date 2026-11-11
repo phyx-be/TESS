@@ -31,7 +31,7 @@ device tree, shared by Linux and U-Boot) and
 buildroot/          Buildroot, branch phyxbe-tess (git submodule)
 configs/            tess_defconfig, tess_flasher_defconfig
 board/tess/         board files, see below
-output/             main image build (not in this repository)
+output-main/        main image build (not in this repository)
 output-flasher/     flasher image build (not in this repository)
 output-esp32c3/     ESP32-C3 firmware build (not in this repository)
 Makefile            make main / flasher / flash, see "How to build"
@@ -68,23 +68,23 @@ The top-level Makefile drives Buildroot for both images:
 
 ```
 make esp32c3   # the ESP32-C3 firmware in output-esp32c3/ (needs Docker)
-make flasher   # the main image in output/, then the flasher image in
+make flasher   # the main image in output-main/, then the flasher image in
                # output-flasher/, which embeds it and the firmware (the
                # default target)
 make main      # only the main image
 ```
 
 Any other target goes to Buildroot for the build in `O` (default:
-`output`, the main image), e.g. `make menuconfig`,
+`output-main`, the main image), e.g. `make menuconfig`,
 `make O=output-flasher linux-rebuild` or `make O=output-flasher help`.
-Plain Buildroot works too: `make -C output` / `make -C output-flasher`
-(the flasher needs the main image in `output/images/`, or
+Plain Buildroot works too: `make -C output-main` / `make -C output-flasher`
+(the flasher needs the main image in `output-main/images/`, or
 `TESS_MAIN_IMAGE` set). `BUILDROOT`, `MAIN_O` and `FLASHER_O` override
 the Buildroot tree and the output directories.
 
 Downloads go to `~/br-dl` (`BR2_DL_DIR` from `~/.profile`).
 
-The main build also creates `output/images/tess-update.raucb`, a RAUC
+The main build also creates `output-main/images/tess-update.raucb`, a RAUC
 update bundle with its root filesystem (see "Updates").
 
 ## Storage layout
@@ -214,7 +214,7 @@ Copy the bundle to the data partition and install it with RAUC; it
 writes the other root filesystem slot and makes U-Boot boot it next:
 
 ```
-scp output/images/tess-update.raucb root@<board>:/data/
+scp output-main/images/tess-update.raucb root@<board>:/data/
 rauc install /data/tess-update.raucb
 reboot
 ```
