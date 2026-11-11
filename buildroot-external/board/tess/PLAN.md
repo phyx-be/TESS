@@ -386,7 +386,7 @@ Related TODOs:
   are the other exact rates of the T113 UART. Change
   `CONFIG_EXAMPLE_HCI_UART_BAUDRATE` in `esp32c3/sdkconfig.defaults.tess`
   (rebuild and reflash the firmware) and `BTATTACH_ARGS` in
-  `rootfs_overlay/common/etc/default/btattach` together, measure with
+  `rootfs_overlay/main/etc/default/btattach` together, measure with
   the display and WiFi active, keep the highest rate without HCI errors.
 - `patches/bluez5_utils/0001-btattach-*.patch` (upstream bluez commit
   12f5eb72, 2026-09-03): needed with glibc >= 2.42 whatever the baud
