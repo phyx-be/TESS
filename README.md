@@ -11,7 +11,9 @@ Some key features of TESS REV 00 are:
 - [RPI Touch Display 2](https://www.raspberrypi.com/products/touch-display-2/) compatible DSI connector
 
 ## Software
-Follow the development of our [buildroot Linux.](https://github.com/phyx-be/buildroot-tess)
+TESS runs Linux built with [Buildroot](https://buildroot.org):
+- [`buildroot-external/`](buildroot-external/): the Buildroot external tree with the TESS images (main image with A/B root filesystems and RAUC updates, USB flasher image, ESP32-C3 firmware). See its [README](buildroot-external/README.md) for how to build and install.
+- [phyx-be/buildroot-tess](https://github.com/phyx-be/buildroot-tess), branch `phyxbe-tess`: Buildroot with the TESS board support (device tree, U-Boot configuration, minimal `phyxbe_tess_defconfig`), on its way to upstream Buildroot.
 
 ## Blockdiagram
 TESS is designed to be a breakout board for the Allwinner T113-S3 with limited features on the board but maximal flexibility.
