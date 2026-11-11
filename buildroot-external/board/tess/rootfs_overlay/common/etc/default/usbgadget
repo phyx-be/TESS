@@ -1,3 +1,6 @@
-# USB gadget on the USB-C port: "ethernet" (CDC ECM + RNDIS, bridged in
-# br0) or "serial" (CDC ACM, /dev/ttyGS0 on the board).
-USB_GADGET="ethernet"
+# USB gadget on the USB-C port, set up by /etc/rc.usbif: "serial" (CDC
+# ACM, /dev/ttyGS0 on the board, with a login console, see
+# /usr/sbin/usb-getty). "ethernet" (CDC ECM + RNDIS, bridged in br0)
+# needs CONFIG_USB_CONFIGFS_ECM/RNDIS and CONFIG_BRIDGE, not in these
+# kernels.
+USB_GADGET="serial"

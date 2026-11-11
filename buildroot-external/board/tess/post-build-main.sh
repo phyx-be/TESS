@@ -1,7 +1,6 @@
 #!/bin/sh
 #
 # Main image:
-#  - login console on the USB serial gadget (ttyGS0)
 #  - read-only root filesystem: mount points and real directories for the
 #    bind mounts from the data partition (/etc/init.d/S00datafs)
 #  - RAUC keyring: the certificate that update bundles must be signed with
@@ -9,12 +8,7 @@
 set -eu
 
 BOARD_DIR="$(dirname "$0")"
-INITTAB="${TARGET_DIR}/etc/inittab"
 RAUC_CERT="${TESS_RAUC_CERT:-${BOARD_DIR}/rauc/development.cert.pem}"
-
-if ! grep -q '^ttyGS0::' "${INITTAB}"; then
-	sed -i '/# GENERIC_SERIAL$/a ttyGS0::respawn:/usr/sbin/usb-getty # USB serial gadget' "${INITTAB}"
-fi
 
 # Data partition mount point
 install -d "${TARGET_DIR}/data"
