@@ -32,6 +32,7 @@ configs/            tess_defconfig, tess_flasher_defconfig
 board/tess/         board files, see below
 output/             main image build (not in this repository)
 output-flasher/     flasher image build (not in this repository)
+Makefile            make main / flasher / flash, see "How to build"
 flash.sh            boots the flasher image over USB (FEL)
 ```
 
@@ -61,20 +62,21 @@ git commit -m "buildroot: update to <commit>" buildroot
 
 ## How to build
 
-Configure the flasher output once, then its `tess-flasher` target (from
-`external.mk`) builds the main image in `output/` and the flasher image,
-which embeds it, in `output-flasher/`:
+The top-level Makefile drives Buildroot for both images:
 
 ```
-make -C buildroot BR2_EXTERNAL=$PWD O=$PWD/output-flasher tess_flasher_defconfig
-make -C output-flasher tess-flasher
+make flasher   # the main image in output/, then the flasher image in
+               # output-flasher/, which embeds it (the default target)
+make main      # only the main image
 ```
 
-`make -C output-flasher tess-main` builds only the main image, and the
-plain `make -C output` / `make -C output-flasher` build one image as
-usual (the flasher needs the main image in `output/images/`, or
-`TESS_MAIN_IMAGE` set). `TESS_MAIN_O` and `TESS_FLASHER_O` change the
-output directories of the targets.
+`make main-<target>` and `make flasher-<target>` run any Buildroot target
+in one of the builds, e.g. `make main-menuconfig` or
+`make flasher-linux-rebuild`. Plain Buildroot works too:
+`make -C output` / `make -C output-flasher` (the flasher needs the main
+image in `output/images/`, or `TESS_MAIN_IMAGE` set). `BUILDROOT`,
+`MAIN_O` and `FLASHER_O` override the Buildroot tree and the output
+directories.
 
 Downloads go to `~/br-dl` (`BR2_DL_DIR` from `~/.profile`).
 
@@ -135,15 +137,13 @@ picocom -b 115200 /dev/ttyUSB0
 
 ## USB console
 
-The main image is a USB serial device (CDC ACM) on the USB-C connector,
+Both images are a USB serial device (CDC ACM) on the USB-C connector,
 with a login console on ttyGS0. On a Linux host:
 
 ```
 picocom /dev/ttyACM0
 ```
 
-The gadget type is set in `/etc/default/usbgadget`: "serial" in the main
-image, "ethernet" (CDC ECM + RNDIS network) in the flasher image.
 ModemManager probes the port once when it appears, which can show a
 "Login incorrect" on the console.
 
@@ -161,12 +161,14 @@ ModemManager probes the port once when it appears, which can show a
 3. Load and start the flasher image:
 
    ```
-   make -C output-flasher tess-flash
+   make flash
    ```
 
-   (or `./flash.sh [output directory]`, default `output-flasher`).
+   (it checks with `sunxi-fel version` that the board is in FEL, then
+   runs `./flash.sh [output directory]`, default `output-flasher`).
 
-4. Log in on the console (UART3, see above) and run:
+4. Log in on the USB console (`picocom /dev/ttyACM0`, or UART3, see
+   above) and run:
 
    ```
    tess-install
