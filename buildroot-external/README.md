@@ -233,7 +233,7 @@ comment in the file).
 ## ESP32-C3 firmware
 
 The ESP32-C3 runs the esp-hosted-linux `network_adapter` firmware, built
-by `make esp32c3` (`board/tess/esp32c3/build.sh`, ESP-IDF in Docker) into
+by `make esp32c3` (`esp32c3/build.sh`, ESP-IDF in Docker) into
 `board/tess/rootfs_overlay/flasher/lib/firmware/esp-hosted/`, where
 `tess-install` takes it from. The host driver (Buildroot's `esp-hosted`
 package) refuses a firmware of another version, so both must come from

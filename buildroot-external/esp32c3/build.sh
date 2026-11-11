@@ -9,7 +9,7 @@
 # runs in the official espressif/idf Docker image.
 #
 # Usage:
-#   board/tess/esp32c3/build.sh
+#   esp32c3/build.sh (or make esp32c3)
 #
 # Environment:
 #   BUILDROOT    Buildroot tree with the esp-hosted package, default: the
@@ -28,10 +28,10 @@
 set -eu
 
 BOARD_DIR=$(cd "$(dirname "$0")" && pwd)
-TESS_DIR=$(cd "${BOARD_DIR}/../../.." && pwd)
+TESS_DIR=$(cd "${BOARD_DIR}/.." && pwd)
 TOPDIR="${BUILDROOT:-${TESS_DIR}/buildroot}"
 O="${O:-${TESS_DIR}/output}"
-OUT_DIR="${BOARD_DIR}/../rootfs_overlay/flasher/lib/firmware/esp-hosted"
+OUT_DIR="${TESS_DIR}/board/tess/rootfs_overlay/flasher/lib/firmware/esp-hosted"
 WORKDIR="${ESP_WORKDIR:-${HOME}/.cache/tess-esp32c3}"
 DL_DIR="${BR2_DL_DIR:-${HOME}/br-dl}"
 
