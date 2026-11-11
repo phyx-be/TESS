@@ -1,12 +1,12 @@
 # Tess images, built with Buildroot from this external tree:
 #
-#   make main      main image in output/ (A/B root filesystems, RAUC)
-#   make flasher   flasher image in output-flasher/, after the main image
-#                  it embeds (the default target)
+#   make flasher   the main image in output/, then the flasher image in
+#                  output-flasher/, which embeds it (the default target)
+#   make main      only the main image
 #   make flash     boot the flasher image over USB (FEL), see flash.sh
-#   make main-<target>, make flasher-<target>
-#                  any Buildroot target in that build, e.g. make
-#                  main-menuconfig, make flasher-linux-rebuild
+#   make <target>  any other target goes to Buildroot for the build in O
+#                  (default: output, the main image), e.g.
+#                  make menuconfig, make O=output-flasher linux-rebuild
 #
 # BUILDROOT, MAIN_O and FLASHER_O override the Buildroot tree (the
 # buildroot submodule) and the output directories. Downloads go to
@@ -17,7 +17,16 @@ BUILDROOT ?= $(TESS_DIR)/buildroot
 MAIN_O ?= $(TESS_DIR)/output
 FLASHER_O ?= $(TESS_DIR)/output-flasher
 
-.PHONY: all main flasher flash
+# Build that the pass-through targets go to
+ifneq ("$(origin O)", "command line")
+O := $(MAIN_O)
+else
+override O := $(abspath $(O))
+endif
+
+BR_MAKE = $(MAKE) -C $(BUILDROOT) BR2_EXTERNAL=$(TESS_DIR)
+
+.PHONY: all main flasher flash help
 
 all: flasher
 
@@ -28,9 +37,8 @@ define buildroot-build
 		echo "ERROR: no Buildroot in $(BUILDROOT): git submodule update --init" >&2; \
 		exit 1; \
 	fi
-	$(if $(wildcard $(1)/.config),,\
-		$(MAKE) -C $(BUILDROOT) BR2_EXTERNAL=$(TESS_DIR) O=$(1) $(2))
-	$(MAKE) -C $(BUILDROOT) O=$(1) $(3)
+	$(if $(wildcard $(1)/.config),,$(BR_MAKE) O=$(1) $(2))
+	$(BR_MAKE) O=$(1)
 endef
 
 main:
@@ -53,9 +61,14 @@ flash:
 	fi
 	$(TESS_DIR)/flash.sh $(FLASHER_O)
 
-main-%:
-	$(call buildroot-build,$(MAIN_O),tess_defconfig,$*)
+help:
+	@echo "make flasher      main image (output/) then flasher image (output-flasher/)"
+	@echo "make main         main image only"
+	@echo "make flash        boot the flasher image over USB (FEL)"
+	@echo "make <target>     Buildroot target for the build in O (default: output),"
+	@echo "                  e.g. make menuconfig, make O=output-flasher linux-rebuild"
+	@echo "make O=... help   Buildroot's own help"
 
-flasher-%: export TESS_MAIN_IMAGE = $(MAIN_O)/images/sdcard.img
-flasher-%:
-	$(call buildroot-build,$(FLASHER_O),tess_flasher_defconfig,$*)
+# Any other target: Buildroot, for the build in O
+.DEFAULT:
+	$(BR_MAKE) O=$(O) "$@"

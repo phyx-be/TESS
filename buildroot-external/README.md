@@ -70,13 +70,13 @@ make flasher   # the main image in output/, then the flasher image in
 make main      # only the main image
 ```
 
-`make main-<target>` and `make flasher-<target>` run any Buildroot target
-in one of the builds, e.g. `make main-menuconfig` or
-`make flasher-linux-rebuild`. Plain Buildroot works too:
-`make -C output` / `make -C output-flasher` (the flasher needs the main
-image in `output/images/`, or `TESS_MAIN_IMAGE` set). `BUILDROOT`,
-`MAIN_O` and `FLASHER_O` override the Buildroot tree and the output
-directories.
+Any other target goes to Buildroot for the build in `O` (default:
+`output`, the main image), e.g. `make menuconfig`,
+`make O=output-flasher linux-rebuild` or `make O=output-flasher help`.
+Plain Buildroot works too: `make -C output` / `make -C output-flasher`
+(the flasher needs the main image in `output/images/`, or
+`TESS_MAIN_IMAGE` set). `BUILDROOT`, `MAIN_O` and `FLASHER_O` override
+the Buildroot tree and the output directories.
 
 Downloads go to `~/br-dl` (`BR2_DL_DIR` from `~/.profile`).
 
