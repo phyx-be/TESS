@@ -4,6 +4,8 @@
 #                  output-flasher/, which embeds it (the default target)
 #   make main      only the main image
 #   make flash     boot the flasher image over USB (FEL), see flash.sh
+#   make esp32c3   ESP32-C3 esp-hosted firmware for the flasher to flash,
+#                  see board/tess/esp32c3/build.sh (ESP-IDF in Docker)
 #   make <target>  any other target goes to Buildroot for the build in O
 #                  (default: output, the main image), e.g.
 #                  make menuconfig, make O=output-flasher linux-rebuild
@@ -26,7 +28,7 @@ endif
 
 BR_MAKE = $(MAKE) -C $(BUILDROOT) BR2_EXTERNAL=$(TESS_DIR)
 
-.PHONY: all main flasher flash help
+.PHONY: all main flasher flash esp32c3 help
 
 all: flasher
 
@@ -61,10 +63,17 @@ flash:
 	fi
 	$(TESS_DIR)/flash.sh $(FLASHER_O)
 
+# The firmware must come from the esp-hosted-linux commit of the esp-hosted
+# package in BUILDROOT; build.sh reads it there and downloads the tarball
+# through the main build (O)
+esp32c3:
+	BUILDROOT=$(BUILDROOT) O=$(MAIN_O) $(TESS_DIR)/board/tess/esp32c3/build.sh
+
 help:
 	@echo "make flasher      main image (output/) then flasher image (output-flasher/)"
 	@echo "make main         main image only"
 	@echo "make flash        boot the flasher image over USB (FEL)"
+	@echo "make esp32c3      ESP32-C3 esp-hosted firmware (ESP-IDF in Docker)"
 	@echo "make <target>     Buildroot target for the build in O (default: output),"
 	@echo "                  e.g. make menuconfig, make O=output-flasher linux-rebuild"
 	@echo "make O=... help   Buildroot's own help"
