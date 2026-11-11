@@ -376,12 +376,19 @@ Purpose: the normal product image, booting on its own from the SD NAND.
 
 Related TODOs:
 
+- `board/tess/patches/linux/0001-fix-dsi-clk.patch` (sun8i_tcon_top:
+  register the TCON TOP clock gates in probe instead of the component
+  bind, a bring-up hack from December 2024 for the DSI path): test a
+  build without it on the board; drop it if the display still comes up,
+  otherwise turn it into a proper fix and send it upstream.
 - ~~Move the Raspberry Pi 7" DSI display into a device tree overlay.~~
-  Done: `rpi-7inch-dsi.dtso`, applied by U-Boot (extlinux `fdtoverlays`
-  in the main image, `fdt apply` in the flasher boot script); the base DTB
-  is built with symbols (`BR2_LINUX_KERNEL_DTB_OVERLAY_SUPPORT`). Linux
-  6.18 cannot build a single `.dtbo` in `arch/arm/boot/dts`:
-  `patches/linux/0002-kbuild-*.patch`.
+  Done: `rpi-7inch-dsi-overlay.dts`, applied by U-Boot (extlinux
+  `fdtoverlays` in the main image, `fdt apply` in the flasher boot
+  script); the base DTB is built with symbols
+  (`BR2_LINUX_KERNEL_DTB_OVERLAY_SUPPORT`). Linux 6.18 cannot build a
+  single `.dtbo` in `arch/arm/boot/dts`, so the overlay is named `.dts`
+  and built as `rpi-7inch-dsi-overlay.dtb` (the kbuild patch that worked
+  around it is gone).
 - Upstream: esp-hosted-linux: firmware patch 0002 (late disconnect
   event with the v6.1 Wi-Fi libraries); esp-hosted-linux HCI UART fix for ESP-IDF v6.1; Buildroot
   `esp-hosted` package update; espflash patch for non-enumerated ports;

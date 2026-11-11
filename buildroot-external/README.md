@@ -208,11 +208,13 @@ signed with the development key in `board/tess/rauc/` unless
 ## Display
 
 The Raspberry Pi 7" DSI display (with touchscreen) is not in the board
-device tree but in the `rpi-7inch-dsi.dtbo` overlay. The main image loads
+device tree but in the `rpi-7inch-dsi-overlay.dtb` overlay
+(`board/tess/rpi-7inch-dsi-overlay.dts`). The main image loads
 it with `fdtoverlays` in `/boot/extlinux/extlinux.conf`: remove that line
 from `board/tess/rootfs_overlay/common` when no display is connected. The flasher
-applies it in its boot script. Building a single `.dtbo` needs the kernel
-patch `board/tess/patches/linux/0002-kbuild-*.patch`.
+applies it in its boot script. The overlay source is a `.dts`, not a
+`.dtso`, so that the kernel builds it with its single-`.dtb` rule (see the
+comment in the file).
 
 ## ESP32-C3 firmware
 
