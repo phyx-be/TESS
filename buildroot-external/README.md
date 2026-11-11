@@ -250,9 +250,10 @@ esp-hosted-linux 2a8772c (the version the old Buildroot fork pinned).
 Buildroot master now ships esp-hosted-linux 54d5367 (NG-1.0.6.0.23), so
 the ESP32-C3 has to be reflashed with a firmware rebuilt from that
 commit (`build.sh`, then the flasher) before WiFi works with the main
-image. Firmware patch `esp32c3/patches/0002-*.patch` (immediate
-disconnect event) no longer applies to 54d5367, where the disconnect
-handling was reworked: check whether it is still needed and drop or
-rebase it.
+image. The former firmware patch 0002 (report a host disconnect right
+away) is dropped: 54d5367 tags the disconnect event with the generation
+of the disconnect command instead, so the host no longer drops the late
+event. To confirm on the board: `wpa_cli disconnect` followed by a
+reconnect must not loop on authentication timeouts.
 
 See `board/tess/PLAN.md` for the hardware notes and the design history.

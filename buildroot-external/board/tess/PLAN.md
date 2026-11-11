@@ -403,8 +403,10 @@ Related TODOs:
   single `.dtbo` in `arch/arm/boot/dts`, so the overlay is named `.dts`
   and built as `rpi-7inch-dsi-overlay.dtb` (the kbuild patch that worked
   around it is gone).
-- Upstream: esp-hosted-linux: firmware patch 0002 (late disconnect
-  event with the v6.1 Wi-Fi libraries); esp-hosted-linux HCI UART fix for ESP-IDF v6.1; Buildroot
+- Upstream: esp-hosted-linux: ~~firmware patch 0002 (late disconnect
+  event with the v6.1 Wi-Fi libraries)~~ (superseded by the disconnect
+  generation in 54d5367, dropped 2026-11-12; reconnect after `wpa_cli
+  disconnect` to be re-checked on the board); esp-hosted-linux HCI UART fix for ESP-IDF v6.1; Buildroot
   `esp-hosted` package update; espflash patch for non-enumerated ports;
   Buildroot `bluez5_utils` btattach backport; kbuild patch for single
   `.dtbo` targets;
