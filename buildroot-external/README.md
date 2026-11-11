@@ -15,8 +15,10 @@ upstream material:
   BLE (btattach), USB serial console and the Raspberry Pi 7" DSI display
 - `configs/tess_flasher_defconfig`: the flasher image, booted over USB
   (FEL), that flashes the ESP32-C3 and writes the main image to the SD NAND
-- `board/tess/`: the files of both images (overlays, scripts, kernel and
-  U-Boot fragments, patches, RAUC development key, ESP32-C3 firmware)
+- `board/tess/`: the files of both images (scripts, kernel and U-Boot
+  fragments, patches, RAUC development key, ESP32-C3 firmware) and the
+  root filesystem overlays in `rootfs_overlay/`: `common` for both images,
+  `main` and `flasher` for one of them
 
 From Buildroot it reuses `board/phyxbe/tess/sun8i-t113s-tess.dts` (the
 device tree, shared by Linux and U-Boot) and
@@ -87,9 +89,9 @@ U-Boot boots the slot that RAUC selected: `BOOT_ORDER`, `BOOT_A_LEFT` and
 `BOOT_B_LEFT` in its environment (`fw_printenv` on the board). Each boot
 attempt costs one, `/etc/init.d/S99rauc-mark-good` resets the counter
 once the system is up, and a slot that fails three times in a row falls
-back to the other one. The A/B boot logic is the U-Boot patch
-`board/tess/patches/uboot/0001-board-sunxi-add-the-Tess-environment.patch`,
-selected by `board/tess/uboot/tess-main.fragment`.
+back to the other one. The A/B boot logic is the U-Boot default
+environment `board/tess/uboot/tess-main.env`
+(`BR2_TARGET_UBOOT_DEFAULT_ENV_FILE` in `configs/tess_defconfig`).
 
 The root filesystem is read-only. These directories are bind-mounted
 from `/data/rootfs` (`/etc/default/datafs`), so they persist across reboots
@@ -177,7 +179,7 @@ reboot
 
 The WiFi configuration is `/etc/wpa_supplicant/wpa_supplicant.conf`, on
 the data partition. On the first boot it is a copy of the one in the
-image (`board/tess/rootfs_overlay/etc/wpa_supplicant/`, ignored by git:
+image (`board/tess/rootfs_overlay/common/etc/wpa_supplicant/`, ignored by git:
 it holds your credentials), if that exists. To change it on the board:
 
 ```
@@ -208,7 +210,7 @@ signed with the development key in `board/tess/rauc/` unless
 The Raspberry Pi 7" DSI display (with touchscreen) is not in the board
 device tree but in the `rpi-7inch-dsi.dtbo` overlay. The main image loads
 it with `fdtoverlays` in `/boot/extlinux/extlinux.conf`: remove that line
-from `board/tess/rootfs_overlay` when no display is connected. The flasher
+from `board/tess/rootfs_overlay/common` when no display is connected. The flasher
 applies it in its boot script. Building a single `.dtbo` needs the kernel
 patch `board/tess/patches/linux/0002-kbuild-*.patch`.
 
@@ -216,7 +218,7 @@ patch `board/tess/patches/linux/0002-kbuild-*.patch`.
 
 The ESP32-C3 runs the esp-hosted-linux `network_adapter` firmware, built
 by `board/tess/esp32c3/build.sh` (ESP-IDF in Docker) into
-`board/tess/rootfs_overlay_flasher/lib/firmware/esp-hosted/`, where
+`board/tess/rootfs_overlay/flasher/lib/firmware/esp-hosted/`, where
 `tess-install` takes it from. The host driver (Buildroot's `esp-hosted`
 package) refuses a firmware of another version, so both must come from
 the same esp-hosted-linux commit; `build.sh` reads that commit from the

@@ -20,7 +20,7 @@
 #                default: ~/.cache/tess-esp32c3
 #   BR2_DL_DIR   Buildroot download directory, default: ~/br-dl
 #
-# Output: board/tess/rootfs_overlay_flasher/lib/firmware/esp-hosted/
+# Output: board/tess/rootfs_overlay/flasher/lib/firmware/esp-hosted/
 #   tess-esp32c3.bin: all images merged into one, to be written at 0x0
 #   bootloader.bin, partition-table.bin, ota_data_initial.bin,
 #   network_adapter.bin and flash_args: the separate images
@@ -31,7 +31,7 @@ BOARD_DIR=$(cd "$(dirname "$0")" && pwd)
 TESS_DIR=$(cd "${BOARD_DIR}/../../.." && pwd)
 TOPDIR="${BUILDROOT:-${TESS_DIR}/buildroot}"
 O="${O:-${TESS_DIR}/output}"
-OUT_DIR="${BOARD_DIR}/../rootfs_overlay_flasher/lib/firmware/esp-hosted"
+OUT_DIR="${BOARD_DIR}/../rootfs_overlay/flasher/lib/firmware/esp-hosted"
 WORKDIR="${ESP_WORKDIR:-${HOME}/.cache/tess-esp32c3}"
 DL_DIR="${BR2_DL_DIR:-${HOME}/br-dl}"
 

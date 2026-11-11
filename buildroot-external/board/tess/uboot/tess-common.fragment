@@ -1,0 +1,6 @@
+# Both images, on top of the in-tree board/phyxbe/tess/uboot.fragment
+# (Tess device tree, no persistent environment)
+
+# Device tree overlays (the DSI display: extlinux.conf "fdtoverlays" in
+# the main image, "fdt apply" in the flasher boot.cmd)
+CONFIG_OF_LIBFDT_OVERLAY=y
