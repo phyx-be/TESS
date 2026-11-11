@@ -4,10 +4,10 @@
 # tree, boot script and the squashfs root filesystem into RAM and start them.
 #
 # Usage, from this external tree:
-#   ./flash.sh [output directory, default: output-flasher in this tree]
+#   ./flash.sh [output directory, default: output/flasher in this tree]
 
 TESS_DIR=$(cd "$(dirname "$0")" && pwd)
-O="${1:-${TESS_DIR}/output-flasher}"
+O="${1:-${TESS_DIR}/output/flasher}"
 I="${O}/images"
 
 "${O}/host/bin/sunxi-fel" -v uboot "${I}/u-boot-sunxi-with-spl.bin" \

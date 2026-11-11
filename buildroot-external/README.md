@@ -31,9 +31,9 @@ device tree, shared by Linux and U-Boot) and
 buildroot/          Buildroot, branch phyxbe-tess (git submodule)
 configs/            tess_defconfig, tess_flasher_defconfig
 board/tess/         board files, see below
-output-main/        main image build (not in this repository)
-output-flasher/     flasher image build (not in this repository)
-output-esp32c3/     ESP32-C3 firmware build (not in this repository)
+output/main/        main image build (not in this repository)
+output/flasher/     flasher image build (not in this repository)
+output/esp32c3/     ESP32-C3 firmware build (not in this repository)
 Makefile            make main / flasher / flash, see "How to build"
 flash.sh            boots the flasher image over USB (FEL)
 ```
@@ -67,24 +67,24 @@ git commit -m "buildroot: update to <commit>" buildroot
 The top-level Makefile drives Buildroot for both images:
 
 ```
-make esp32c3   # the ESP32-C3 firmware in output-esp32c3/ (needs Docker)
-make flasher   # the main image in output-main/, then the flasher image in
-               # output-flasher/, which embeds it and the firmware (the
+make esp32c3   # the ESP32-C3 firmware in output/esp32c3/ (needs Docker)
+make flasher   # the main image in output/main/, then the flasher image in
+               # output/flasher/, which embeds it and the firmware (the
                # default target)
 make main      # only the main image
 ```
 
 Any other target goes to Buildroot for the build in `O` (default:
-`output-main`, the main image), e.g. `make menuconfig`,
-`make O=output-flasher linux-rebuild` or `make O=output-flasher help`.
-Plain Buildroot works too: `make -C output-main` / `make -C output-flasher`
-(the flasher needs the main image in `output-main/images/`, or
+`output/main`, the main image), e.g. `make menuconfig`,
+`make O=output/flasher linux-rebuild` or `make O=output/flasher help`.
+Plain Buildroot works too: `make -C output/main` / `make -C output/flasher`
+(the flasher needs the main image in `output/main/images/`, or
 `TESS_MAIN_IMAGE` set). `BUILDROOT`, `MAIN_O` and `FLASHER_O` override
 the Buildroot tree and the output directories.
 
 Downloads go to `~/br-dl` (`BR2_DL_DIR` from `~/.profile`).
 
-The main build also creates `output-main/images/tess-update.raucb`, a RAUC
+The main build also creates `output/main/images/tess-update.raucb`, a RAUC
 update bundle with its root filesystem (see "Updates").
 
 ## Storage layout
@@ -159,7 +159,7 @@ ModemManager probes the port once when it appears, which can show a
    Check with:
 
    ```
-   ./output-flasher/host/bin/sunxi-fel version
+   ./output/flasher/host/bin/sunxi-fel version
    ```
 
 3. Load and start the flasher image:
@@ -169,7 +169,7 @@ ModemManager probes the port once when it appears, which can show a
    ```
 
    (it checks with `sunxi-fel version` that the board is in FEL, then
-   runs `./flash.sh [output directory]`, default `output-flasher`).
+   runs `./flash.sh [output directory]`, default `output/flasher`).
 
 4. Log in on the USB console (`picocom /dev/ttyACM0`, or UART3, see
    above) and run:
@@ -214,7 +214,7 @@ Copy the bundle to the data partition and install it with RAUC; it
 writes the other root filesystem slot and makes U-Boot boot it next:
 
 ```
-scp output-main/images/tess-update.raucb root@<board>:/data/
+scp output/main/images/tess-update.raucb root@<board>:/data/
 rauc install /data/tess-update.raucb
 reboot
 ```
@@ -238,7 +238,7 @@ comment in the file).
 
 The ESP32-C3 runs the esp-hosted-linux `network_adapter` firmware, built
 by `make esp32c3` (`esp32c3/build.sh`, ESP-IDF in Docker) into
-`output-esp32c3/`, not tracked in git; the flasher build copies it to
+`output/esp32c3/`, not tracked in git; the flasher build copies it to
 `/lib/firmware/esp-hosted/` in the flasher image
 (`board/tess/post-build-flasher.sh`), where `tess-install` takes it from. The host driver (Buildroot's `esp-hosted`
 package) refuses a firmware of another version, so both must come from
