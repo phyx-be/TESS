@@ -13,7 +13,7 @@ fails with serial_not_found although the port exists. When the port
 given on the command line or in the configuration exists but is not
 enumerated, use it with an unknown port type instead.
 
-Upstream: not yet submitted
+Upstream: https://github.com/esp-rs/espflash/pull/1122
 Signed-off-by: Bert Outtier <outtierbert@gmail.com>
 ---
  espflash/src/cli/serial.rs | 10 ++++++++++
