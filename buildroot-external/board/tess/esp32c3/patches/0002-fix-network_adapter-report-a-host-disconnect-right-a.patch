@@ -1,0 +1,47 @@
+From 2e479209331975fca9d1f4217160cc5e1fe10e17 Mon Sep 17 00:00:00 2001
+From: Bert Outtier <outtierbert@gmail.com>
+Date: Wed, 14 Oct 2026 11:19:17 +0200
+Subject: [PATCH] fix(network_adapter): report a host disconnect right away
+
+On ESP32-C3 with ESP-IDF v6.1, a CMD_DISCONNECT from the host (for
+example wpa_cli disconnect, or wpa_supplicant exiting) deauthenticates
+with esp_wifi_deauthenticate_internal(). The station goes to init, but
+the Wi-Fi library posts WIFI_EVENT_STA_DISCONNECTED only when the next
+connection attempt ends, so the DISCONNECT_EVENT reaches the host
+seconds later. Meanwhile cfg80211 still considers the station connected,
+the host drops the late event for an unexpected generation, and the
+station loops on auth timeouts until the driver is reloaded.
+
+Use esp_wifi_disconnect() instead: it posts the event right away. The
+deauthentication frame then carries reason 8 (leaving) instead of the
+host's reason.
+---
+ esp/esp_driver/network_adapter/main/cmd.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/esp/esp_driver/network_adapter/main/cmd.c b/esp/esp_driver/network_adapter/main/cmd.c
+index 1ed8f9e..a2d4dfd 100644
+--- a/esp/esp_driver/network_adapter/main/cmd.c
++++ b/esp/esp_driver/network_adapter/main/cmd.c
+@@ -2314,7 +2314,17 @@ int process_disconnect(uint8_t if_type, uint8_t *payload, uint16_t payload_len)
+             s_assoc_control_port = 0;
+             s_assoc_is_reassoc = 0;
+             association_ongoing = 0;
+-            esp_wifi_deauthenticate_internal(reason);
++            /*
++             * esp_wifi_deauthenticate_internal() takes the station to init,
++             * but then the Wi-Fi library only posts WIFI_EVENT_STA_DISCONNECTED
++             * when the next connection attempt ends. The host waits for that
++             * event to finish the disconnect, and when it finally comes it
++             * also resets the state of the new attempt. esp_wifi_disconnect()
++             * posts the event right away (the deauthentication frame carries
++             * reason 8, leaving, instead of the host's reason).
++             */
++            (void)reason;
++            esp_wifi_disconnect();
+             status = CMD_RESPONSE_SUCCESS;
+         }
+     } else if (if_type == ESP_AP_IF) {
+-- 
+2.53.0
+

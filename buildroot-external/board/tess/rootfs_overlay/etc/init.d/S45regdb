@@ -1,0 +1,38 @@
+#!/bin/sh
+#
+# Load the wireless regulatory database and set the country.
+#
+# cfg80211 is built into the kernel and tries to load regulatory.db before
+# the root filesystem is mounted. That fails, and the kernel does not try
+# again by itself, so setting a country would be ignored. Reload it now.
+
+REGDOMAIN=""
+
+# shellcheck source=/dev/null
+[ -r /etc/default/regdomain ] && . /etc/default/regdomain
+
+start() {
+	command -v iw > /dev/null || return 0
+	[ -f /lib/firmware/regulatory.db ] || return 0
+
+	printf 'Loading wireless regulatory database: '
+	if ! iw reg reload; then
+		echo "FAIL"
+		return 1
+	fi
+	if [ -n "${REGDOMAIN}" ] && ! iw reg set "${REGDOMAIN}"; then
+		echo "FAIL (country ${REGDOMAIN})"
+		return 1
+	fi
+	echo "OK${REGDOMAIN:+ (country ${REGDOMAIN})}"
+}
+
+case "$1" in
+	start|restart|reload)
+		start;;
+	stop)
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart|reload}"
+		exit 1
+esac

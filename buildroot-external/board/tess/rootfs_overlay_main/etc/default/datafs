@@ -1,0 +1,11 @@
+# Data partition, mounted read-write on /data by /etc/init.d/S00datafs.
+# Partition DATA_PART of DATA_DISK; when it is missing, S00datafs creates
+# it after partition DATA_PART - 1 (root filesystem slot B), up to the end
+# of the disk.
+DATA_DISK=/dev/mmcblk0
+DATA_PART=3
+
+# Directories of the read-only root filesystem that are bind-mounted from
+# /data/rootfs/<directory>. On the first boot, and for entries an update
+# adds later, the contents come from the root filesystem.
+DATA_BINDS="/etc/dropbear /etc/wpa_supplicant /var/lib /var/log"

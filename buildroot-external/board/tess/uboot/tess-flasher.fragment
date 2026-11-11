@@ -1,0 +1,5 @@
+# Flasher image only, on top of the in-tree board/phyxbe/tess/uboot.fragment
+# (no persistent environment: booted over FEL)
+
+# Device tree overlays (the DSI display, "fdt apply" in boot.cmd)
+CONFIG_OF_LIBFDT_OVERLAY=y

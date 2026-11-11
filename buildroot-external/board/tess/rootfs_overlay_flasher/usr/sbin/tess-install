@@ -1,0 +1,54 @@
+#!/bin/sh
+#
+# Install Tess: flash the ESP32-C3 firmware and write the main image to
+# the SD NAND (SDC0).
+#
+#  1. Flash the ESP32-C3 (esp32c3-flash)
+#  2. Write /usr/share/tess/sdcard.img.xz to /dev/mmcblk0: U-Boot, the
+#     U-Boot environment (reset to its defaults) and both root filesystem
+#     slots, the first 196 MiB
+#  3. Read it back and compare its checksum
+#
+# The ESP32-C3 goes first: if it fails, the SD NAND is left untouched.
+# The data partition (mmcblk0p3) lies behind the image and is not
+# touched. The image's partition table does not list it; the main image
+# adds it again on its next boot (/etc/init.d/S00datafs), at the same
+# place, so its filesystem and data are kept.
+#
+# Usage: tess-install
+
+IMG=/usr/share/tess/sdcard.img.xz
+INFO=/usr/share/tess/sdcard.img.info
+DEV=/dev/mmcblk0
+
+die() {
+	echo "tess-install: $*" >&2
+	exit 1
+}
+
+[ -f "${IMG}" ] || die "no image ${IMG}"
+[ -b "${DEV}" ] || die "${DEV} not found"
+if grep -q "^${DEV}" /proc/mounts; then
+	die "${DEV} is mounted"
+fi
+
+read -r SIZE SHA < "${INFO}" || die "cannot read ${INFO}"
+
+# 1. ESP32-C3 firmware
+esp32c3-flash || die "flashing the ESP32-C3 failed, SD NAND not written"
+
+# 2. Write
+echo "Writing ${IMG} to ${DEV} (${SIZE} bytes)"
+xzcat "${IMG}" | dd of="${DEV}" bs=1M || die "writing ${DEV} failed"
+sync
+echo 3 > /proc/sys/vm/drop_caches
+
+# 3. Verify
+echo "Verifying ${DEV}"
+GOT=$(head -c "${SIZE}" "${DEV}" | sha256sum | cut -d' ' -f1)
+[ "${GOT}" = "${SHA}" ] || die "checksum mismatch: ${GOT}, expected ${SHA}"
+echo "SD NAND written and verified"
+
+echo
+echo "Tess installed. Power cycle or reset the board (without SW2) to boot"
+echo "from the SD NAND."

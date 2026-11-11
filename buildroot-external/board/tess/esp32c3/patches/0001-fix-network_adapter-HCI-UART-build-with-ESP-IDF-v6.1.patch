@@ -1,0 +1,53 @@
+From 77034470bb660849b2048726f4abde3f1db3f5e9 Mon Sep 17 00:00:00 2001
+From: Bert Outtier <outtierbert@gmail.com>
+Date: Wed, 7 Oct 2026 12:19:16 +0200
+Subject: [PATCH] fix(network_adapter): HCI UART build with ESP-IDF v6.1
+
+ESP-IDF v6.1 changed gdma_new_ahb_channel() to allocate the TX and RX
+channel pair in one call and dropped the direction, sibling_chan and
+reserve_sibling allocation config fields. Building the firmware for
+ESP32-C3 with CONFIG_BT_CTRL_HCI_MODE_UART_H4 fails with:
+
+  slave_bt.c:321:16: error: 'struct <anonymous>' has no member named
+  'reserve_sibling'
+
+Use the new API, like ESP-IDF's own hci_driver_uart_dma.c does.
+---
+ esp/esp_driver/network_adapter/main/slave_bt.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/esp/esp_driver/network_adapter/main/slave_bt.c b/esp/esp_driver/network_adapter/main/slave_bt.c
+index da03089..406d283 100644
+--- a/esp/esp_driver/network_adapter/main/slave_bt.c
++++ b/esp/esp_driver/network_adapter/main/slave_bt.c
+@@ -21,6 +21,7 @@
+ #include "soc/lldesc.h"
+ #include "esp_bt.h"
+ #include "esp_log.h"
++#include "esp_idf_version.h"
+ #include "slave_bt.h"
+ 
+ #if defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
+@@ -317,6 +318,11 @@ static void init_uart(void)
+     ESP_ERROR_CHECK(uart_param_config(BLUETOOTH_UART, &uart_config));
+ 
+     // install DMA driver
++#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 1, 0)
++    /* ESP-IDF v6.1 allocates the TX/RX channel pair in one call */
++    gdma_channel_alloc_config_t channel_config = {0};
++    ESP_ERROR_CHECK(gdma_new_ahb_channel(&channel_config, &s_tx_channel, &s_rx_channel));
++#else
+     gdma_channel_alloc_config_t tx_channel_config = {
+         .flags.reserve_sibling = 1,
+         .direction = GDMA_CHANNEL_DIRECTION_TX,
+@@ -327,6 +333,7 @@ static void init_uart(void)
+         .sibling_chan = s_tx_channel,
+     };
+     ESP_ERROR_CHECK(gdma_new_ahb_channel(&rx_channel_config, &s_rx_channel));
++#endif
+ 
+     gdma_connect(s_tx_channel, GDMA_MAKE_TRIGGER(GDMA_TRIG_PERIPH_UHCI, 0));
+     gdma_connect(s_rx_channel, GDMA_MAKE_TRIGGER(GDMA_TRIG_PERIPH_UHCI, 0));
+-- 
+2.53.0
+

@@ -1,0 +1,4 @@
+# ESP32-C3 BLE controller: HCI H4 on UART2 (ttyS2) at 500000 baud, with
+# RTS/CTS flow control. 500000 is exact on the T113 UART (base baud
+# 1500000) and must match CONFIG_EXAMPLE_HCI_UART_BAUDRATE of the firmware.
+BTATTACH_ARGS="-B /dev/ttyS2 -P h4 -S 500000"

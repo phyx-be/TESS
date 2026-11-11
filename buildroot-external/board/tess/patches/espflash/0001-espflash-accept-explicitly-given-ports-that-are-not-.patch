@@ -1,0 +1,45 @@
+From 8893339e42ada047eaa75bc2258e00214a9300c5 Mon Sep 17 00:00:00 2001
+From: Bert Outtier <outtierbert@gmail.com>
+Date: Wed, 7 Oct 2026 13:52:54 +0200
+Subject: [PATCH] espflash: accept explicitly given ports that are not
+ enumerated
+
+serialport's available_ports() does not list every serial port, e.g. the
+on-chip UARTs of an Allwinner T113 board (/dev/ttyS4), so
+
+  espflash write-bin --port /dev/ttyS4 ...
+
+fails with serial_not_found although the port exists. When the port
+given on the command line or in the configuration exists but is not
+enumerated, use it with an unknown port type instead.
+
+Upstream: not yet submitted
+Signed-off-by: Bert Outtier <outtierbert@gmail.com>
+---
+ espflash/src/cli/serial.rs | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/espflash/src/cli/serial.rs b/espflash/src/cli/serial.rs
+index 6d88d24..f19537c 100644
+--- a/espflash/src/cli/serial.rs
++++ b/espflash/src/cli/serial.rs
+@@ -103,6 +103,16 @@ fn find_serial_port(ports: &[SerialPortInfo], name: &str) -> Result<SerialPortIn
+     if let Some(port) = port_info {
+         Ok(port.to_owned())
+     } else {
++        // An explicitly given port that exists but is not enumerated, e.g. an
++        // on-chip UART of an embedded Linux board: use it as it is.
++        // canonicalize() above already failed if it does not exist.
++        #[cfg(not(target_os = "windows"))]
++        return Ok(SerialPortInfo {
++            port_name: name.to_string(),
++            port_type: SerialPortType::Unknown,
++        });
++
++        #[cfg(target_os = "windows")]
+         Err(Error::SerialNotFound(name.to_string()))
+     }
+ }
+-- 
+2.53.0
+

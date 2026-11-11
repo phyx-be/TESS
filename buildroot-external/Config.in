@@ -1,0 +1,2 @@
+# Tess external tree: no extra packages. Board support (device tree,
+# U-Boot fragment, minimal defconfig) is in Buildroot itself, see README.md.

@@ -1,0 +1,22 @@
+RAUC signing key and certificate for Tess update bundles
+
+development.key.pem and development.cert.pem are a self-signed key pair
+for development only: the private key is in this repository, so anyone
+can sign a bundle that these images accept.
+
+The build copies the certificate to /etc/rauc/keyring.pem in the main
+image (post-build-main.sh) and signs tess-update.raucb with the key
+(post-image-main.sh). For production, generate a key outside this
+repository and point the build at it:
+
+  TESS_RAUC_KEY=/path/to/key.pem TESS_RAUC_CERT=/path/to/cert.pem make
+
+A board only accepts bundles signed with the key matching the
+certificate in its running image, so switching keys needs one update
+signed with the old key that installs an image with the new certificate.
+
+The development pair was created with:
+
+  openssl req -x509 -newkey rsa:4096 -nodes -keyout development.key.pem \
+          -out development.cert.pem -days 36500 \
+          -subj "/O=Phyx/CN=Tess RAUC development"

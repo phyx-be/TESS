@@ -1,0 +1,21 @@
+#!/bin/sh
+#
+# Mark the booted root filesystem slot as good once the system is up:
+# RAUC resets its U-Boot boot counter (BOOT_A_LEFT / BOOT_B_LEFT). A slot
+# that fails to get here three times in a row is skipped by U-Boot.
+
+case "$1" in
+	start)
+		printf "Marking the booted slot good: "
+		if rauc status mark-good > /dev/null 2>&1; then
+			echo "OK"
+		else
+			echo "FAIL"
+		fi
+		;;
+	stop|restart|reload)
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart|reload}"
+		exit 1
+esac

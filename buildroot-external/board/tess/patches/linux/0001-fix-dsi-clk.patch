@@ -1,0 +1,36 @@
+--- a/drivers/gpu/drm/sun4i/sun8i_tcon_top.c	2024-12-09 21:36:17.983305586 +0100
++++ b/drivers/gpu/drm/sun4i/sun8i_tcon_top.c	2024-12-09 21:37:45.963742268 +0100
+@@ -234,6 +234,12 @@
+ 	return ret;
+ }
+ 
++static int bind_new(struct device *dev, struct device *master,
++                               void *data)
++{
++	return 0;
++}
++
+ static void sun8i_tcon_top_unbind(struct device *dev, struct device *master,
+ 				  void *data)
+ {
+@@ -251,13 +257,18 @@
+ }
+ 
+ static const struct component_ops sun8i_tcon_top_ops = {
+-	.bind	= sun8i_tcon_top_bind,
++	.bind	= bind_new,
+ 	.unbind	= sun8i_tcon_top_unbind,
+ };
+ 
+ static int sun8i_tcon_top_probe(struct platform_device *pdev)
+ {
+-	return component_add(&pdev->dev, &sun8i_tcon_top_ops);
++	dev_info(&pdev->dev, "%s\n", __func__);
++	component_add(&pdev->dev, &sun8i_tcon_top_ops);
++
++	sun8i_tcon_top_bind(&pdev->dev, NULL, NULL);
++
++	return 0;
+ }
+ 
+ static void sun8i_tcon_top_remove(struct platform_device *pdev)

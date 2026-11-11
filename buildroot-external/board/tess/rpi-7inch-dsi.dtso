@@ -1,0 +1,86 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * Raspberry Pi 7" Touch Display 2 on the Tess DSI connector: ILI9881C
+ * panel, display MCU (power, reset, backlight PWM) and Goodix GT911
+ * touchscreen on I2C2.
+ *
+ * Needs a base device tree built with symbols (-@). Applied by U-Boot:
+ * extlinux.conf "fdtoverlays" in the main image, "fdt apply" in the
+ * flasher boot script.
+ */
+
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/gpio/gpio.h>
+
+&{/} {
+	backlight: backlight {
+		compatible = "pwm-backlight";
+		pwms = <&display_mcu 0 255 0>;
+		brightness-levels = <0 255>;
+		num-interpolated-steps = <255>;
+		default-brightness-level = <255>;
+	};
+
+	touch_reg: regulator-touch {
+		compatible = "regulator-fixed";
+		regulator-name = "touch_reg_1";
+		gpio = <&display_mcu 1 GPIO_ACTIVE_HIGH>;
+		startup-delay-us = <50000>;
+		enable-active-high;
+		regulator-boot-on;
+	};
+};
+
+&de {
+	status = "okay";
+};
+
+&dphy {
+	status = "okay";
+};
+
+&dsi {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	vcc-dsi-supply = <&reg_3v3>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&dsi_4lane_pins>;
+	status = "okay";
+
+	panel@0 {
+		reg = <0>;
+		compatible = "raspberrypi,dsi-7inch";
+		reset-gpios = <&display_mcu 0 GPIO_ACTIVE_LOW>;
+		backlight = <&backlight>;
+		power-supply = <&reg_3v3>;
+	};
+};
+
+&tcon_lcd0 {
+	status = "okay";
+};
+
+&i2c2 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	display_mcu: display_mcu@45 {
+		compatible = "raspberrypi,touchscreen-panel-regulator-v2";
+		reg = <0x45>;
+		gpio-controller;
+		#gpio-cells = <2>;
+		#pwm-cells = <3>;
+	};
+
+	gt911@5d {
+		compatible = "goodix,gt911";
+		reg = <0x5d>;
+		AVDD28-supply = <&touch_reg>;
+		touchscreen-size-x = <720>;
+		touchscreen-size-y = <1280>;
+		touchscreen-x-mm = <90>;
+		touchscreen-y-mm = <151>;
+	};
+};

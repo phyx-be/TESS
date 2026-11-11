@@ -1,0 +1,4 @@
+# USB gadget on the USB-C port: "ethernet" (CDC ECM + RNDIS, bridged in
+# br0) or "serial" (CDC ACM, /dev/ttyGS0 on the board, with a login
+# console, see /usr/sbin/usb-getty).
+USB_GADGET="serial"

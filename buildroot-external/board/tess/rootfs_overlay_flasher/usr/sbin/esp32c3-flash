@@ -1,0 +1,88 @@
+#!/bin/sh
+#
+# Flash the esp-hosted firmware to the ESP32-C3 module over UART4.
+#
+#  1. Hold ESP.BOOT (PE10) low and pulse WiFi.EN (PE11): ROM download mode
+#  2. Write the firmware with espflash (it skips flash regions that already
+#     have the right contents and verifies what it writes)
+#  3. Release ESP.BOOT, reset the ESP and show its boot log
+#
+# Afterwards WiFi.EN stays driven high by a background gpioset, so the
+# ESP keeps running.
+#
+# Usage: esp32c3-flash [firmware directory]
+
+FW_DIR="${1:-/lib/firmware/esp-hosted}"
+FW=tess-esp32c3.bin	# all images merged, written at 0x0
+PORT=/dev/ttyS4		# T113 UART4 <-> ESP32-C3 UART0 (UART_PROG)
+# exact on the T113 UART (24 MHz clock, base baud 1500000), unlike 460800
+BAUD=1500000
+LINE_BOOT=138		# PE10: 4 * 32 + 10
+LINE_EN=139		# PE11: 4 * 32 + 11
+PIDFILE=/run/esp32c3-gpio.pid
+LOG=/tmp/esp32c3-boot.log
+
+die() {
+	echo "esp32c3-flash: $*" >&2
+	exit 1
+}
+
+# The pin controller is the gpiochip labeled 2000000.pinctrl
+CHIP=$(gpiodetect | sed -n 's/^\(gpiochip[0-9]*\) \[2000000\.pinctrl\].*/\1/p')
+[ -n "${CHIP}" ] || die "pin controller gpiochip not found"
+[ -f "${FW_DIR}/${FW}" ] || die "no ${FW} in ${FW_DIR}"
+
+if lsmod 2>/dev/null | grep -q '^esp32_spi'; then
+	die "esp32_spi is loaded and owns WiFi.EN, rmmod it first"
+fi
+
+# Set BOOT and EN, and keep holding them with a background gpioset
+set_lines() {
+	if [ -f "${PIDFILE}" ]; then
+		kill "$(cat "${PIDFILE}")" 2>/dev/null
+		rm -f "${PIDFILE}"
+		usleep 10000
+	fi
+	gpioset -c "${CHIP}" -z "${LINE_BOOT}=$1" "${LINE_EN}=$2" ||
+		die "gpioset failed"
+	pidof gpioset | cut -d' ' -f1 > "${PIDFILE}"
+}
+
+# 1. ROM download mode
+echo "Entering ROM download mode"
+set_lines 0 0
+usleep 100000
+set_lines 0 1
+usleep 200000
+
+# 2. Flash
+cd "${FW_DIR}" || die "cannot enter ${FW_DIR}"
+[ -f VERSION ] && cat VERSION
+
+echo "Writing firmware"
+espflash write-bin --chip esp32c3 --port "${PORT}" --baud "${BAUD}" \
+	--before no-reset --after no-reset --non-interactive \
+	0x0 "${FW}" || die "espflash write-bin failed"
+
+# 3. Normal boot, show the boot log
+echo "Starting firmware"
+stty -F "${PORT}" 115200 raw -echo
+cat "${PORT}" > "${LOG}" &
+CAT_PID=$!
+set_lines 1 0
+usleep 100000
+set_lines 1 1
+sleep 3
+kill "${CAT_PID}"
+
+echo "---- ESP32-C3 boot log (${LOG}) ----"
+strings -n 3 "${LOG}"
+echo "----"
+
+if grep -q "invalid header" "${LOG}"; then
+	die "the ESP32-C3 does not find a valid image"
+fi
+if ! grep -q "boot:0x[0-9a-f]* (SPI_FAST_FLASH_BOOT)" "${LOG}"; then
+	die "no normal boot seen on ${PORT}"
+fi
+echo "Done"

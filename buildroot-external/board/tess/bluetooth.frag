@@ -1,0 +1,4 @@
+# ESP32-C3 BLE: HCI over UART2 (H4), attached with btattach
+CONFIG_BT=y
+CONFIG_BT_HCIUART=y
+CONFIG_BT_HCIUART_H4=y

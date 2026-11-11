@@ -1,0 +1,1 @@
+SUBSYSTEM=="udc", DEVPATH=="/devices/platform/soc/4100000.usb/musb-hdrc.2.auto/udc/musb-hdrc.2.auto", ENV{USB_UDC_NAME}="%k", RUN+="/etc/rc.usbif"
