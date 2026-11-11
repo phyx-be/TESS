@@ -3,11 +3,10 @@
 # Boot the Tess flasher image over USB (FEL): load U-Boot, kernel, device
 # tree, boot script and the squashfs root filesystem into RAM and start them.
 #
-# Usage:
-#   board/tess/flash.sh [output directory, default: output-flasher next to
-#                        this external tree]
+# Usage, from this external tree:
+#   ./flash.sh [output directory, default: output-flasher in this tree]
 
-TESS_DIR=$(cd "$(dirname "$0")/../.." && pwd)
+TESS_DIR=$(cd "$(dirname "$0")" && pwd)
 O="${1:-${TESS_DIR}/output-flasher}"
 I="${O}/images"
 

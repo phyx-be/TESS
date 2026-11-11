@@ -32,6 +32,7 @@ configs/            tess_defconfig, tess_flasher_defconfig
 board/tess/         board files, see below
 output/             main image build (not in this repository)
 output-flasher/     flasher image build (not in this repository)
+flash.sh            boots the flasher image over USB (FEL)
 ```
 
 ## Buildroot checkout
@@ -60,14 +61,20 @@ git commit -m "buildroot: update to <commit>" buildroot
 
 ## How to build
 
-The flasher embeds the main image, so build the main image first:
+Configure the flasher output once, then its `tess-flasher` target (from
+`external.mk`) builds the main image in `output/` and the flasher image,
+which embeds it, in `output-flasher/`:
 
 ```
-make -C buildroot BR2_EXTERNAL=$PWD O=$PWD/output tess_defconfig
-make -C output
 make -C buildroot BR2_EXTERNAL=$PWD O=$PWD/output-flasher tess_flasher_defconfig
-make -C output-flasher
+make -C output-flasher tess-flasher
 ```
+
+`make -C output-flasher tess-main` builds only the main image, and the
+plain `make -C output` / `make -C output-flasher` build one image as
+usual (the flasher needs the main image in `output/images/`, or
+`TESS_MAIN_IMAGE` set). `TESS_MAIN_O` and `TESS_FLASHER_O` change the
+output directories of the targets.
 
 Downloads go to `~/br-dl` (`BR2_DL_DIR` from `~/.profile`).
 
@@ -154,11 +161,10 @@ ModemManager probes the port once when it appears, which can show a
 3. Load and start the flasher image:
 
    ```
-   board/tess/flash.sh
+   make -C output-flasher tess-flash
    ```
 
-   (the output directory of the flasher build is `output-flasher` by
-   default, pass another one as the argument).
+   (or `./flash.sh [output directory]`, default `output-flasher`).
 
 4. Log in on the console (UART3, see above) and run:
 
@@ -217,7 +223,7 @@ The Raspberry Pi 7" DSI display (with touchscreen) is not in the board
 device tree but in the `rpi-7inch-dsi-overlay.dtb` overlay
 (`board/tess/rpi-7inch-dsi-overlay.dts`). The main image loads
 it with `fdtoverlays` in `/boot/extlinux/extlinux.conf`: remove that line
-from `board/tess/rootfs_overlay/common` when no display is connected. The flasher
+from `board/tess/rootfs_overlay/main` when no display is connected. The flasher
 applies it in its boot script. The overlay source is a `.dts`, not a
 `.dtso`, so that the kernel builds it with its single-`.dtb` rule (see the
 comment in the file).
