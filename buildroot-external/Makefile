@@ -36,12 +36,16 @@ all: flasher
 
 # $(1): output directory, $(2): defconfig name. An output directory that
 # has no configuration yet gets its defconfig.
-define buildroot-build
+define buildroot-configure
 	@if [ ! -f $(BUILDROOT)/Makefile ]; then \
 		echo "ERROR: no Buildroot in $(BUILDROOT): git submodule update --init" >&2; \
 		exit 1; \
 	fi
 	$(if $(wildcard $(1)/.config),,$(BR_MAKE) O=$(1) $(2))
+endef
+
+define buildroot-build
+	$(call buildroot-configure,$(1),$(2))
 	$(BR_MAKE) O=$(1)
 endef
 
@@ -67,9 +71,10 @@ flash:
 	$(TESS_DIR)/flash.sh $(FLASHER_O)
 
 # The firmware must come from the esp-hosted-linux commit of the esp-hosted
-# package in BUILDROOT; build.sh reads it there and downloads the tarball
-# through the main build (O)
+# package in BUILDROOT: build.sh asks the configured main build (O) for it
+# and downloads the tarball through it
 esp32c3:
+	$(call buildroot-configure,$(MAIN_O),tess_defconfig)
 	BUILDROOT=$(BUILDROOT) O=$(MAIN_O) TESS_ESP32C3_O=$(ESP32C3_O) $(TESS_DIR)/esp32c3/build.sh
 
 help:

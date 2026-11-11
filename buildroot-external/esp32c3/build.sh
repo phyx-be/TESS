@@ -4,7 +4,8 @@
 #
 # The firmware is built from the same esp-hosted-linux commit as the
 # esp-hosted kernel module package, because the module refuses to talk to
-# a firmware with a different version. ESP-IDF is checked out at the
+# a firmware with a different version: the commit and the source tarball
+# come from Buildroot (make printvars) and its download directory. ESP-IDF is checked out at the
 # commit pinned by esp-hosted-linux (esp/esp_driver/.env) and the build
 # runs in the official espressif/idf Docker image.
 #
@@ -14,11 +15,12 @@
 # Environment:
 #   BUILDROOT    Buildroot tree with the esp-hosted package, default: the
 #                buildroot checkout next to this external tree
-#   O            Buildroot output directory (to download the esp-hosted
-#                tarball), default: output/main in this external tree
+#   O            configured Buildroot output directory of the main image
+#                (make esp32c3 configures it), to ask Buildroot for the
+#                esp-hosted version and tarball and to download the latter,
+#                default: output/main in this external tree
 #   ESP_WORKDIR  work directory, kept between builds (ESP-IDF checkout)
 #                default: ~/.cache/tess-esp32c3
-#   BR2_DL_DIR   Buildroot download directory, default: ~/br-dl
 #   TESS_ESP32C3_O
 #                output directory, default: output/esp32c3 next to this
 #                directory (not tracked in git; post-build-flasher.sh copies
@@ -37,11 +39,16 @@ TOPDIR="${BUILDROOT:-${TESS_DIR}/buildroot}"
 O="${O:-${TESS_DIR}/output/main}"
 OUT_DIR="${TESS_ESP32C3_O:-${TESS_DIR}/output/esp32c3}"
 WORKDIR="${ESP_WORKDIR:-${HOME}/.cache/tess-esp32c3}"
-DL_DIR="${BR2_DL_DIR:-${HOME}/br-dl}"
 
-ESP_HOSTED_VERSION=$(sed -n 's/^ESP_HOSTED_VERSION = //p' \
-	"${TOPDIR}/package/esp-hosted/esp-hosted.mk")
-TARBALL="${DL_DIR}/esp-hosted/ng-v${ESP_HOSTED_VERSION}.tar.gz"
+# esp-hosted package: version, download directory and tarball name
+eval "$(make -C "${TOPDIR}" O="${O}" -s --no-print-directory printvars \
+	VARS='ESP_HOSTED_VERSION ESP_HOSTED_DL_DIR ESP_HOSTED_SOURCE' QUOTED_VARS=YES)"
+if [ -z "${ESP_HOSTED_VERSION:-}" ]; then
+	echo "ERROR: ${O} is not a configured Buildroot output directory" >&2
+	echo "(make esp32c3 configures it, or make -C ${TOPDIR} O=${O} tess_defconfig)" >&2
+	exit 1
+fi
+TARBALL="${ESP_HOSTED_DL_DIR}/${ESP_HOSTED_SOURCE}"
 
 if [ ! -f "${TARBALL}" ]; then
 	echo "Downloading esp-hosted ${ESP_HOSTED_VERSION}"
