@@ -1,0 +1,15 @@
+#!/bin/sh
+#
+# Install Tess: flash the ESP32-C3 firmware (esp32c3-flash). The SD NAND is
+# written from the host over USB DFU instead (flash-sd.sh, make flash-sd).
+#
+# Usage: tess-install
+
+esp32c3-flash || {
+	echo "tess-install: flashing the ESP32-C3 failed" >&2
+	exit 1
+}
+
+echo
+echo "ESP32-C3 flashed. To write the SD NAND, reset the board into FEL"
+echo "(hold SW2, press SW1) and run flash-sd.sh (make flash-sd) on the host."

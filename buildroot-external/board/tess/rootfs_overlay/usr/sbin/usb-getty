@@ -1,0 +1,14 @@
+#!/bin/sh
+#
+# Login console on the USB serial gadget (/dev/ttyGS0), started from
+# /etc/inittab. The port only exists once udev has set up the gadget
+# (/etc/rc.usbif), so wait for it instead of letting init respawn getty
+# in a tight loop.
+
+TTY=ttyGS0
+
+while [ ! -c "/dev/${TTY}" ]; do
+	sleep 1
+done
+
+exec /sbin/getty -L "${TTY}" 0 vt100

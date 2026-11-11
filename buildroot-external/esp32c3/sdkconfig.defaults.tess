@@ -1,0 +1,20 @@
+# Tess: ESP32-C3-MINI-1, WiFi over SPI, BLE HCI over UART
+#
+# Pins (esp-hosted defaults for ESP32-C3):
+#   SPI2:     MOSI=GPIO7 MISO=GPIO2 CLK=GPIO6 CS=GPIO10
+#             handshake=GPIO3 data ready=GPIO4
+#   HCI UART: UART1 TX=GPIO5 RX=GPIO18 RTS=GPIO19 CTS=GPIO8
+#   Console:  UART0 GPIO20/GPIO21 (T113 UART4, also used by esptool)
+
+CONFIG_ESP_SPI_HOST_INTERFACE=y
+
+# BLE HCI over UART (H4) instead of over the SPI transport (VHCI)
+CONFIG_BT_CTRL_HCI_MODE_UART_H4=y
+# 500000: the T113 UART clock (24 MHz, base baud 1500000) cannot make
+# 921600, and btattach needs a standard termios rate
+CONFIG_EXAMPLE_HCI_UART_BAUDRATE=500000
+
+# GPIO18/GPIO19 are used by the HCI UART: no USB-Serial-JTAG console
+CONFIG_ESP_CONSOLE_UART_DEFAULT=y
+CONFIG_ESP_CONSOLE_SECONDARY_NONE=y
+CONFIG_USJ_ENABLE_USB_SERIAL_JTAG=n
