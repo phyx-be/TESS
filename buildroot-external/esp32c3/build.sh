@@ -19,8 +19,12 @@
 #   ESP_WORKDIR  work directory, kept between builds (ESP-IDF checkout)
 #                default: ~/.cache/tess-esp32c3
 #   BR2_DL_DIR   Buildroot download directory, default: ~/br-dl
+#   TESS_ESP32C3_O
+#                output directory, default: output-esp32c3 next to this
+#                directory (not tracked in git; post-build-flasher.sh copies
+#                it into the flasher image)
 #
-# Output: board/tess/rootfs_overlay/flasher/lib/firmware/esp-hosted/
+# Output, in TESS_ESP32C3_O:
 #   tess-esp32c3.bin: all images merged into one, to be written at 0x0
 #   bootloader.bin, partition-table.bin, ota_data_initial.bin,
 #   network_adapter.bin and flash_args: the separate images
@@ -31,7 +35,7 @@ BOARD_DIR=$(cd "$(dirname "$0")" && pwd)
 TESS_DIR=$(cd "${BOARD_DIR}/.." && pwd)
 TOPDIR="${BUILDROOT:-${TESS_DIR}/buildroot}"
 O="${O:-${TESS_DIR}/output}"
-OUT_DIR="${TESS_DIR}/board/tess/rootfs_overlay/flasher/lib/firmware/esp-hosted"
+OUT_DIR="${TESS_ESP32C3_O:-${TESS_DIR}/output-esp32c3}"
 WORKDIR="${ESP_WORKDIR:-${HOME}/.cache/tess-esp32c3}"
 DL_DIR="${BR2_DL_DIR:-${HOME}/br-dl}"
 

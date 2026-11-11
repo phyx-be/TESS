@@ -15,6 +15,7 @@ upstream material:
   BLE (btattach), USB serial console and the Raspberry Pi 7" DSI display
 - `configs/tess_flasher_defconfig`: the flasher image, booted over USB
   (FEL), that flashes the ESP32-C3 and writes the main image to the SD NAND
+- `esp32c3/`: the ESP32-C3 firmware build (esp-hosted, ESP-IDF in Docker)
 - `board/tess/`: the files of both images (scripts, kernel and U-Boot
   fragments, patches, RAUC development key, ESP32-C3 firmware) and the
   root filesystem overlays in `rootfs_overlay/`: `common` for both images,
@@ -32,6 +33,7 @@ configs/            tess_defconfig, tess_flasher_defconfig
 board/tess/         board files, see below
 output/             main image build (not in this repository)
 output-flasher/     flasher image build (not in this repository)
+output-esp32c3/     ESP32-C3 firmware build (not in this repository)
 Makefile            make main / flasher / flash, see "How to build"
 flash.sh            boots the flasher image over USB (FEL)
 ```
@@ -65,8 +67,10 @@ git commit -m "buildroot: update to <commit>" buildroot
 The top-level Makefile drives Buildroot for both images:
 
 ```
+make esp32c3   # the ESP32-C3 firmware in output-esp32c3/ (needs Docker)
 make flasher   # the main image in output/, then the flasher image in
-               # output-flasher/, which embeds it (the default target)
+               # output-flasher/, which embeds it and the firmware (the
+               # default target)
 make main      # only the main image
 ```
 
@@ -234,13 +238,14 @@ comment in the file).
 
 The ESP32-C3 runs the esp-hosted-linux `network_adapter` firmware, built
 by `make esp32c3` (`esp32c3/build.sh`, ESP-IDF in Docker) into
-`board/tess/rootfs_overlay/flasher/lib/firmware/esp-hosted/`, where
-`tess-install` takes it from. The host driver (Buildroot's `esp-hosted`
+`output-esp32c3/`, not tracked in git; the flasher build copies it to
+`/lib/firmware/esp-hosted/` in the flasher image
+(`board/tess/post-build-flasher.sh`), where `tess-install` takes it from. The host driver (Buildroot's `esp-hosted`
 package) refuses a firmware of another version, so both must come from
 the same esp-hosted-linux commit; `build.sh` reads that commit from the
 package in `buildroot/`.
 
-Status: the committed firmware binaries are NG-1.0.6.0.15, built from
+Status: the firmware on the boards is NG-1.0.6.0.15, built from
 esp-hosted-linux 2a8772c (the version the old Buildroot fork pinned).
 Buildroot master now ships esp-hosted-linux 54d5367 (NG-1.0.6.0.23), so
 the ESP32-C3 has to be reflashed with a firmware rebuilt from that
