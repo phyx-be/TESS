@@ -1,0 +1,4 @@
+[submodule "buildroot-external/buildroot"]
+	path = buildroot-external/buildroot
+	url = https://github.com/phyx-be/buildroot-tess.git
+	branch = phyxbe-tess

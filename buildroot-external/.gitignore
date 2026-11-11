@@ -1,5 +1,3 @@
-# Buildroot checkout (git worktree or clone of the phyxbe-tess branch)
-/buildroot/
 # Build output directories
 /output*/
 # Per-developer WiFi credentials copied into the image (see README.md)

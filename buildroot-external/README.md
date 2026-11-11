@@ -27,7 +27,7 @@ device tree, shared by Linux and U-Boot) and
 ## Layout
 
 ```
-buildroot/          Buildroot, branch phyxbe-tess (not in this repository)
+buildroot/          Buildroot, branch phyxbe-tess (git submodule)
 configs/            tess_defconfig, tess_flasher_defconfig
 board/tess/         board files, see below
 output/             main image build (not in this repository)
@@ -36,21 +36,27 @@ output-flasher/     flasher image build (not in this repository)
 
 ## Buildroot checkout
 
-`buildroot/` is a checkout of the `phyxbe-tess` branch. Locally it is a
-git worktree of the shared bare clone:
+`buildroot/` is a git submodule: the `phyxbe-tess` branch of
+https://github.com/phyx-be/buildroot-tess, pinned to a commit. Get it
+when cloning, or afterwards:
 
 ```
-git -C ~/development/buildroot.git worktree add buildroot phyxbe-tess
+git clone --recurse-submodules git@github.com:phyx-be/TESS.git
+# or, in an existing clone:
+git submodule update --init
 ```
 
-Elsewhere, clone the branch from the fork that carries it:
+To save time and disk space with a local Buildroot clone, pass it as a
+reference: `git submodule update --init --reference ~/development/buildroot.git`.
+
+The branch must stay a clean single commit on upstream `master` for the
+pull request. After rebasing and pushing it, move the submodule to the
+new commit and commit that here:
 
 ```
-git clone -b phyxbe-tess https://github.com/phyx-be/buildroot-tess.git buildroot
+git submodule update --remote buildroot
+git commit -m "buildroot: update to <commit>" buildroot
 ```
-
-Rebase the branch on upstream `master` from time to time; it must stay
-a clean single commit for the pull request.
 
 ## How to build
 
