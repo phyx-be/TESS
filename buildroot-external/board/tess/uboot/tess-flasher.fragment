@@ -1,0 +1,9 @@
+# Flasher image only, on top of the in-tree board/phyxbe/tess/uboot.fragment
+# (booted over FEL, no persistent environment): USB DFU, to write the SD
+# NAND from the host when U-Boot is started standalone (see tess-flasher.env
+# and flash-sd.sh)
+CONFIG_USB_MUSB_GADGET=y
+CONFIG_USB_GADGET_DOWNLOAD=y
+CONFIG_USB_FUNCTION_DFU=y
+CONFIG_CMD_DFU=y
+CONFIG_DFU_MMC=y

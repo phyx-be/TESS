@@ -14,7 +14,8 @@ upstream material:
   with A/B root filesystems, RAUC updates, a data partition, WiFi (esp-hosted),
   BLE (btattach), USB serial console and the Raspberry Pi 7" DSI display
 - `configs/tess_flasher_defconfig`: the flasher image, booted over USB
-  (FEL), that flashes the ESP32-C3 and writes the main image to the SD NAND
+  (FEL), that flashes the ESP32-C3; its U-Boot, started alone over FEL,
+  offers USB DFU to write the SD NAND from the host
 - `esp32c3/`: the ESP32-C3 firmware build (esp-hosted, ESP-IDF in Docker)
 - `board/tess/`: the files of both images (scripts, kernel and U-Boot
   fragments, patches, RAUC development key, ESP32-C3 firmware) and the
@@ -34,7 +35,8 @@ board/tess/         board files, see below
 output/main/        main image build (not in this repository)
 output/flasher/     flasher image build (not in this repository)
 output/esp32c3/     ESP32-C3 firmware build (not in this repository)
-Makefile            make main / flasher / flash, see "How to build"
+Makefile            make main / flasher / flash-sd / flash, see "How to build"
+flash-sd.sh         writes an image to the SD NAND over USB (FEL + DFU)
 flash.sh            boots the flasher image over USB (FEL)
 ```
 
@@ -67,11 +69,11 @@ git commit -m "buildroot: update to <commit>" buildroot
 The top-level Makefile drives Buildroot for both images:
 
 ```
+make main      # the main image in output/main/
 make esp32c3   # the ESP32-C3 firmware in output/esp32c3/ (needs Docker)
-make flasher   # the main image in output/main/, then the flasher image in
-               # output/flasher/, which embeds it and the firmware (the
-               # default target)
-make main      # only the main image
+make flasher   # the flasher image in output/flasher/, which embeds the
+               # firmware
+make           # main and flasher
 ```
 
 Any other target goes to Buildroot for the build in `O` (default:
@@ -153,36 +155,48 @@ ModemManager probes the port once when it appears, which can show a
 
 ## Installing over USB (FEL)
 
+Both steps start from the USB bootloader (FEL) of the T113:
+
 1. Connect the USB-C connector to the host.
 2. Hold SW2 (pulls SDC0 CLK low, disabling the on-board storage) and
-   press/release SW1 (RESET). The SoC now enters the USB bootloader (FEL).
-   Check with:
+   press/release SW1 (RESET). The SoC now enters FEL. Check with:
 
    ```
    ./output/flasher/host/bin/sunxi-fel version
    ```
 
-3. Load and start the flasher image:
+### SD NAND: the main image, over USB DFU
 
-   ```
-   make flash
-   ```
+```
+make flash-sd              # output/main/images/sdcard.img
+make flash-sd IMAGE=<file> # any other image
+```
 
-   (it checks with `sunxi-fel version` that the board is in FEL, then
-   runs `./flash.sh [output directory]`, default `output/flasher`).
+`flash-sd.sh` starts the flasher's U-Boot alone over FEL. Without a boot
+script to run, U-Boot enters USB DFU (`board/tess/uboot/tess-flasher.env`),
+and dfu-util sends the image to the `sdcard` entity, the whole SD NAND.
+The main image writes U-Boot, its environment (back to the defaults) and
+both root filesystem slots, the first 196 MiB; the data partition behind
+it is not touched, the main image finds it again on its first boot (and
+reboots once). When dfu-util detaches, U-Boot resets the board, which
+boots the new image (release SW2 first).
 
-4. Log in on the USB console (`picocom /dev/ttyACM0`, or UART3, see
-   above) and run:
+### ESP32-C3: the flasher image
 
-   ```
-   tess-install
-   ```
+```
+make flash
+```
 
-   It flashes the ESP32-C3 firmware over UART4, writes the main image
-   to the SD NAND: U-Boot, its environment (back to the defaults) and
-   both root filesystem slots. The data partition is not touched, the
-   main image finds it again on its first boot (and reboots once). Then
-   reset the board without SW2 to boot it.
+It loads and starts the flasher image over FEL (`flash.sh`: U-Boot with
+the kernel, device tree, boot script and root filesystem; with a boot
+script, U-Boot boots Linux instead of starting DFU). Log in on the USB
+console (`picocom /dev/ttyACM0`, or UART3, see above) and run:
+
+```
+tess-install
+```
+
+It flashes the ESP32-C3 firmware over UART4 (`esp32c3-flash`).
 
 If SW2 does not get the board into FEL, erase the U-Boot SPL from the
 running main image; the boot ROM then falls back to FEL on the next

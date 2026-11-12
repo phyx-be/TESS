@@ -427,3 +427,10 @@ Related TODOs:
 4. BLE HCI baudrate: 500000 (exact on the T113 UART).
 5. Flashing tool: espflash, no Python in the flasher image.
 6. U-Boot version: 2026.01, as the MangoPi defconfig (done).
+7. SD NAND written from the host over USB DFU (2026-11-12): the flasher's
+   U-Boot, started alone over FEL (no `fel_scriptaddr`), runs
+   `dfu 0 mmc 0` with the whole SD NAND as the raw `sdcard` entity;
+   `flash-sd.sh` drives sunxi-fel and dfu-util. Started with the flasher's
+   boot script, it boots the flasher Linux as before, which now only
+   flashes the ESP32-C3. The main image is no longer embedded in the
+   flasher (decision 3 above is superseded).

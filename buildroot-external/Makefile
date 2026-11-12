@@ -1,12 +1,19 @@
 # Tess images, built with Buildroot from this external tree:
 #
-#   make flasher   the main image in output/main/, then the flasher image in
-#                  output/flasher/, which embeds it (the default target)
-#   make main      only the main image
-#   make flash     boot the flasher image over USB (FEL), see flash.sh
+#   make           the main image in output/main/ and the flasher image in
+#                  output/flasher/ (the default target)
+#   make main      the main image (A/B root filesystems, RAUC)
+#   make flasher   the flasher image, with the ESP32-C3 firmware
+#   make flash-sd  write the main image (or IMAGE=<file>) to the SD NAND
+#                  over USB: the flasher's U-Boot over FEL, then USB DFU,
+#                  see flash-sd.sh
+#   make flash     boot the flasher image over USB (FEL) to flash the
+#                  ESP32-C3, see flash.sh
 #   make esp32c3   ESP32-C3 esp-hosted firmware in output/esp32c3/, which
 #                  the flasher image embeds and flashes; build it before
 #                  the flasher (esp32c3/build.sh, ESP-IDF in Docker)
+#
+# IMAGE is the image make flash-sd writes (default: the main image).
 #   make <target>  any other target goes to Buildroot for the build in O
 #                  (default: output/main, the main image), e.g.
 #                  make menuconfig, make O=output/flasher linux-rebuild
@@ -20,6 +27,7 @@ BUILDROOT ?= $(TESS_DIR)/buildroot
 MAIN_O ?= $(TESS_DIR)/output/main
 FLASHER_O ?= $(TESS_DIR)/output/flasher
 ESP32C3_O ?= $(TESS_DIR)/output/esp32c3
+IMAGE ?= $(MAIN_O)/images/sdcard.img
 
 # Build that the pass-through targets go to
 ifneq ("$(origin O)", "command line")
@@ -30,9 +38,9 @@ endif
 
 BR_MAKE = $(MAKE) -C $(BUILDROOT) BR2_EXTERNAL=$(TESS_DIR)
 
-.PHONY: all main flasher flash esp32c3 help
+.PHONY: all main flasher flash flash-sd esp32c3 help
 
-all: flasher
+all: main flasher
 
 # $(1): output directory, $(2): defconfig name. An output directory that
 # has no configuration yet gets its defconfig.
@@ -52,10 +60,15 @@ endef
 main:
 	$(call buildroot-build,$(MAIN_O),tess_defconfig)
 
-flasher: export TESS_MAIN_IMAGE = $(MAIN_O)/images/sdcard.img
 flasher: export TESS_ESP32C3_O = $(ESP32C3_O)
-flasher: main
+flasher:
 	$(call buildroot-build,$(FLASHER_O),tess_flasher_defconfig)
+
+# The SD NAND is written from the host: flash-sd.sh checks that the board
+# is in FEL, starts the flasher's U-Boot alone, which enters USB DFU, and
+# sends the image with dfu-util
+flash-sd:
+	$(TESS_DIR)/flash-sd.sh $(IMAGE) $(FLASHER_O)
 
 # sunxi-fel (host-sunxi-tools of the flasher build) first checks that the
 # board is in FEL: hold SW2 and press SW1 (RESET) with the USB-C connected
@@ -78,9 +91,11 @@ esp32c3:
 	BUILDROOT=$(BUILDROOT) O=$(MAIN_O) TESS_ESP32C3_O=$(ESP32C3_O) $(TESS_DIR)/esp32c3/build.sh
 
 help:
-	@echo "make flasher      main image (output/main/) then flasher image (output/flasher/)"
-	@echo "make main         main image only"
-	@echo "make flash        boot the flasher image over USB (FEL)"
+	@echo "make              main image (output/main/) and flasher image (output/flasher/)"
+	@echo "make main         main image"
+	@echo "make flasher      flasher image (ESP32-C3 flashing)"
+	@echo "make flash-sd     write the main image (IMAGE=...) to the SD NAND over USB DFU"
+	@echo "make flash        boot the flasher image over USB (FEL) to flash the ESP32-C3"
 	@echo "make esp32c3      ESP32-C3 esp-hosted firmware in output/esp32c3/ (ESP-IDF in Docker)"
 	@echo "make <target>     Buildroot target for the build in O (default: output/main),"
 	@echo "                  e.g. make menuconfig, make O=output/flasher linux-rebuild"
