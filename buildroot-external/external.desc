@@ -1,2 +1,2 @@
 name: TESS
-desc: Phyx Tess (Allwinner T113-S3): A/B main image with RAUC, USB flasher image, ESP32-C3 firmware
+desc: Phyx Tess (Allwinner T113-S3): USB flasher image, ESP32-C3 firmware, flashing over USB

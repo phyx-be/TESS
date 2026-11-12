@@ -15,15 +15,15 @@
 # Environment:
 #   BUILDROOT    Buildroot tree with the esp-hosted package, default: the
 #                buildroot checkout next to this external tree
-#   O            configured Buildroot output directory of the main image
-#                (make esp32c3 configures it), to ask Buildroot for the
+#   O            configured Buildroot output directory (make esp32c3
+#                configures the flasher build), to ask Buildroot for the
 #                esp-hosted version and tarball and to download the latter,
-#                default: output/main in this external tree
+#                default: output/flasher in this external tree
 #   ESP_WORKDIR  work directory, kept between builds (ESP-IDF checkout)
 #                default: ~/.cache/tess-esp32c3
 #   TESS_ESP32C3_O
 #                output directory, default: output/esp32c3 next to this
-#                directory (not tracked in git; post-build-flasher.sh copies
+#                directory (not tracked in git; board/tess/post-build.sh copies
 #                it into the flasher image)
 #
 # Output, in TESS_ESP32C3_O:
@@ -36,7 +36,7 @@ set -eu
 BOARD_DIR=$(cd "$(dirname "$0")" && pwd)
 TESS_DIR=$(cd "${BOARD_DIR}/.." && pwd)
 TOPDIR="${BUILDROOT:-${TESS_DIR}/buildroot}"
-O="${O:-${TESS_DIR}/output/main}"
+O="${O:-${TESS_DIR}/output/flasher}"
 OUT_DIR="${TESS_ESP32C3_O:-${TESS_DIR}/output/esp32c3}"
 WORKDIR="${ESP_WORKDIR:-${HOME}/.cache/tess-esp32c3}"
 
@@ -45,7 +45,7 @@ eval "$(make -C "${TOPDIR}" O="${O}" -s --no-print-directory printvars \
 	VARS='ESP_HOSTED_VERSION ESP_HOSTED_DL_DIR ESP_HOSTED_SOURCE' QUOTED_VARS=YES)"
 if [ -z "${ESP_HOSTED_VERSION:-}" ]; then
 	echo "ERROR: ${O} is not a configured Buildroot output directory" >&2
-	echo "(make esp32c3 configures it, or make -C ${TOPDIR} O=${O} tess_defconfig)" >&2
+	echo "(make esp32c3 configures it, or make -C ${TOPDIR} O=${O} tess_flasher_defconfig)" >&2
 	exit 1
 fi
 TARBALL="${ESP_HOSTED_DL_DIR}/${ESP_HOSTED_SOURCE}"

@@ -1,5 +1,11 @@
 # Tess: ESP32-C3 WiFi/BLE and image layout plan
 
+Note (2026-11-12): the main image moved to its own repository, tess-os
+(https://github.com/bertouttier/tess-os, private), with its own copy of
+this file for the main image's TODOs. This tree keeps the flasher, the
+ESP32-C3 firmware build and the USB flashing tools; the sections about
+the main image below are history.
+
 Note (2026-11-08): this work moved from a Buildroot fork (branch
 feat/add_tess, `board/phyxbe/tess/`, `configs/phyxbe_tess_*_defconfig`)
 to this BR2_EXTERNAL tree (`board/tess/`, `configs/tess_*_defconfig`), on

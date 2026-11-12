@@ -1,1 +1,0 @@
-SUBSYSTEM=="net", RUN+="/etc/rc.netif"

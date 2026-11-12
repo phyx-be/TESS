@@ -1,1 +1,0 @@
-DROPBEAR_ARGS="-B -b /etc/banner"

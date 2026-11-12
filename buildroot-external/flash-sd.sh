@@ -9,15 +9,16 @@
 # press SW1 (RESET).
 #
 # Usage, from this external tree:
-#   ./flash-sd.sh [image] [flasher output directory]
-#     image: default output/main/images/sdcard.img (the main image)
+#   ./flash-sd.sh <image> [flasher output directory]
+#     image: e.g. output/images/sdcard.img of tess-os (the main image)
 #     flasher output directory: default output/flasher (for sunxi-fel,
 #     dfu-util and U-Boot)
 
 set -eu
 
 TESS_DIR=$(cd "$(dirname "$0")" && pwd)
-IMG="${1:-${TESS_DIR}/output/main/images/sdcard.img}"
+[ $# -ge 1 ] || { echo "Usage: $0 <image> [flasher output directory]" >&2; exit 1; }
+IMG="$1"
 O="${2:-${TESS_DIR}/output/flasher}"
 FEL="${O}/host/bin/sunxi-fel"
 DFU="${O}/host/bin/dfu-util"
@@ -31,7 +32,7 @@ die() {
 	exit 1
 }
 
-[ -f "${IMG}" ] || die "image ${IMG} not found (make main, or give an image)"
+[ -f "${IMG}" ] || die "image ${IMG} not found"
 [ -x "${FEL}" ] && [ -x "${DFU}" ] && [ -f "${UBOOT}" ] ||
 	die "flasher build not found in ${O} (make flasher)"
 SIZE=$(stat -c %s "${IMG}")

@@ -12,7 +12,8 @@ Some key features of TESS REV 00 are:
 
 ## Software
 TESS runs Linux built with [Buildroot](https://buildroot.org):
-- [`buildroot-external/`](buildroot-external/) (clone with `--recurse-submodules`, Buildroot is a submodule): the Buildroot external tree with the TESS images (main image with A/B root filesystems and RAUC updates, USB flasher image, ESP32-C3 firmware). See its [README](buildroot-external/README.md) for how to build and install.
+- [tess-os](https://github.com/bertouttier/tess-os) (private): the main image, with A/B root filesystems and RAUC updates, WiFi and BLE through the ESP32-C3, the DSI display and CircuitPython (Blinka).
+- [`buildroot-external/`](buildroot-external/) (clone with `--recurse-submodules`, Buildroot is a submodule): the flasher image that flashes the ESP32-C3, the ESP32-C3 firmware, and the tools to write an image to the built-in SD NAND over USB. See its [README](buildroot-external/README.md).
 - [phyx-be/buildroot-tess](https://github.com/phyx-be/buildroot-tess), branch `phyxbe-tess`: Buildroot with the TESS board support (device tree, U-Boot configuration, minimal `phyxbe_tess_defconfig`), on its way to upstream Buildroot.
 
 ## Blockdiagram

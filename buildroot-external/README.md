@@ -1,43 +1,41 @@
-# Tess Buildroot external tree
+# Tess flasher and USB flashing tools
 
 Buildroot `BR2_EXTERNAL` tree for the Phyx Tess board (Allwinner T113-S3,
-ESP32-C3 WiFi/BLE co-processor, Adafruit Feather form factor).
+ESP32-C3 WiFi/BLE co-processor, Adafruit Feather form factor). It holds:
+
+- `configs/tess_flasher_defconfig`: the flasher image, booted over USB
+  (FEL), that flashes the ESP32-C3. Its U-Boot, started alone over FEL,
+  offers USB DFU to write the SD NAND from the host.
+- `esp32c3/`: the ESP32-C3 firmware build (esp-hosted, ESP-IDF in Docker).
+- `flash-sd.sh` and `flash.sh`: write an image to the SD NAND, and boot the
+  flasher, over USB.
+- `board/tess/`: the files of the flasher image (overlay, scripts, kernel
+  and U-Boot configuration, espflash patch).
+
+The main image, with A/B root filesystems, RAUC updates, WiFi, BLE, the
+DSI display and CircuitPython, is built in its own repository, tess-os
+(https://github.com/bertouttier/tess-os, private).
 
 Basic board support lives in Buildroot itself, on the branch
-`phyxbe-tess` (upstream `master` plus one commit adding
-`board/phyxbe/tess/` and the minimal `phyxbe_tess_defconfig`, to be
-submitted as a pull request to https://github.com/buildroot/buildroot).
-This tree builds on that branch and adds everything that is not
-upstream material:
-
-- `configs/tess_defconfig`: the main image, booting from the SD NAND
-  with A/B root filesystems, RAUC updates, a data partition, WiFi (esp-hosted),
-  BLE (btattach), USB serial console and the Raspberry Pi 7" DSI display
-- `configs/tess_flasher_defconfig`: the flasher image, booted over USB
-  (FEL), that flashes the ESP32-C3; its U-Boot, started alone over FEL,
-  offers USB DFU to write the SD NAND from the host
-- `esp32c3/`: the ESP32-C3 firmware build (esp-hosted, ESP-IDF in Docker)
-- `board/tess/`: the files of both images (scripts, kernel and U-Boot
-  fragments, patches, RAUC development key, ESP32-C3 firmware) and the
-  root filesystem overlays in `rootfs_overlay/`: `common` for both images,
-  `main` and `flasher` for one of them
-
-From Buildroot it reuses `board/phyxbe/tess/sun8i-t113s-tess.dts` (the
-device tree, shared by Linux and U-Boot) and
-`board/phyxbe/tess/uboot.fragment`.
+`phyxbe-tess` of https://github.com/phyx-be/buildroot-tess (upstream
+`master` plus the commit adding `board/phyxbe/tess/` and the minimal
+`phyxbe_tess_defconfig`, to be submitted as a pull request). This tree
+reuses its `board/phyxbe/tess/sun8i-t113s-tess.dts` (the device tree,
+shared by Linux and U-Boot), `board/phyxbe/tess/uboot.fragment` and the
+Linux and U-Boot hash files.
 
 ## Layout
 
 ```
 buildroot/          Buildroot, branch phyxbe-tess (git submodule)
-configs/            tess_defconfig, tess_flasher_defconfig
-board/tess/         board files, see below
-output/main/        main image build (not in this repository)
-output/flasher/     flasher image build (not in this repository)
-output/esp32c3/     ESP32-C3 firmware build (not in this repository)
-Makefile            make main / flasher / flash-sd / flash, see "How to build"
+configs/            tess_flasher_defconfig
+board/tess/         board files, see above
+esp32c3/            ESP32-C3 firmware build
+Makefile            make / esp32c3 / flash / flash-sd, see "How to build"
 flash-sd.sh         writes an image to the SD NAND over USB (FEL + DFU)
 flash.sh            boots the flasher image over USB (FEL)
+output/flasher/     flasher image build (not in this repository)
+output/esp32c3/     ESP32-C3 firmware build (not in this repository)
 ```
 
 ## Buildroot checkout
@@ -55,9 +53,10 @@ git submodule update --init
 To save time and disk space with a local Buildroot clone, pass it as a
 reference: `git submodule update --init --reference ~/development/buildroot.git`.
 
-The branch must stay a clean single commit on upstream `master` for the
-pull request. After rebasing and pushing it, move the submodule to the
-new commit and commit that here:
+Keep the submodule at the same Buildroot commit as the one in tess-os, or
+at least at the same `esp-hosted` package version: the ESP32-C3 firmware
+built here must match the esp-hosted driver of the main image. After
+`phyxbe-tess` moves, update it in both repositories:
 
 ```
 git submodule update --remote buildroot
@@ -66,64 +65,19 @@ git commit -m "buildroot: update to <commit>" buildroot
 
 ## How to build
 
-The top-level Makefile drives Buildroot for both images:
-
 ```
-make main      # the main image in output/main/
 make esp32c3   # the ESP32-C3 firmware in output/esp32c3/ (needs Docker)
-make flasher   # the flasher image in output/flasher/, which embeds the
+make           # the flasher image in output/flasher/, which embeds the
                # firmware
-make           # main and flasher
 ```
 
-Any other target goes to Buildroot for the build in `O` (default:
-`output/main`, the main image), e.g. `make menuconfig`,
-`make O=output/flasher linux-rebuild` or `make O=output/flasher help`.
-Plain Buildroot works too: `make -C output/main` / `make -C output/flasher`
-(the flasher needs the main image in `output/main/images/`, or
-`TESS_MAIN_IMAGE` set). `BUILDROOT`, `MAIN_O` and `FLASHER_O` override
-the Buildroot tree and the output directories.
+Any other target goes to Buildroot for the flasher build (`O`, default
+`output/flasher`), e.g. `make menuconfig` or `make linux-rebuild`;
+`make help-buildroot` shows Buildroot's own help. `BUILDROOT`,
+`FLASHER_O` and `ESP32C3_O` override the Buildroot tree and the output
+directories. Downloads go to `~/br-dl` (`BR2_DL_DIR` from `~/.profile`).
 
-Downloads go to `~/br-dl` (`BR2_DL_DIR` from `~/.profile`).
-
-The main build also creates `output/main/images/tess-update.raucb`, a RAUC
-update bundle with its root filesystem (see "Updates").
-
-## Storage layout
-
-SD NAND (mmcblk0, 480 MiB, or larger):
-
-```
-  8 KiB    U-Boot with SPL
-  1 MiB    U-Boot environment, two redundant copies of 64 KiB
-  4 MiB    mmcblk0p1  root filesystem slot A (96 MiB, ext4, read-only)
-  100 MiB  mmcblk0p2  root filesystem slot B (96 MiB, ext4, read-only)
-  196 MiB  mmcblk0p3  data (the rest, ext4, read-write, /data)
-```
-
-The image (`sdcard.img`) holds everything up to the data partition, which
-it does not contain. On boot, `/etc/init.d/S00datafs` adds the data
-partition when the partition table has none (up to the end of the SD
-NAND, then it reboots once) and creates its filesystem when it has none.
-
-U-Boot boots the slot that RAUC selected: `BOOT_ORDER`, `BOOT_A_LEFT` and
-`BOOT_B_LEFT` in its environment (`fw_printenv` on the board). Each boot
-attempt costs one, `/etc/init.d/S99rauc-mark-good` resets the counter
-once the system is up, and a slot that fails three times in a row falls
-back to the other one. The A/B boot logic is the U-Boot default
-environment `board/tess/uboot/tess-main.env`
-(`BR2_TARGET_UBOOT_DEFAULT_ENV_FILE` in `configs/tess_defconfig`).
-
-The root filesystem is read-only. These directories are bind-mounted
-from `/data/rootfs` (`/etc/default/datafs`), so they persist across reboots
-and updates: `/etc/dropbear` (SSH host keys), `/etc/wpa_supplicant` (WiFi),
-`/var/lib` and `/var/log`. Everything else is replaced by an update.
-
-The upstream `phyxbe_tess_defconfig` image uses the same first 100 MiB
-(U-Boot at 8 KiB, one root filesystem at 4 MiB) without environment,
-slot B and data partition.
-
-## Serial console
+## Consoles
 
 The Linux and U-Boot console is UART3 (ttyS3), 115200 8N1, 3.3V levels.
 Connect a 3.3V USB-serial adapter to header P7:
@@ -141,10 +95,8 @@ Do not connect the VCC pin of the adapter, and do not use a 5V adapter.
 picocom -b 115200 /dev/ttyUSB0
 ```
 
-## USB console
-
-Both images are a USB serial device (CDC ACM) on the USB-C connector,
-with a login console on ttyGS0. On a Linux host:
+The flasher is also a USB serial device (CDC ACM) on the USB-C
+connector, with a login console on ttyGS0:
 
 ```
 picocom /dev/ttyACM0
@@ -165,21 +117,18 @@ Both steps start from the USB bootloader (FEL) of the T113:
    ./output/flasher/host/bin/sunxi-fel version
    ```
 
-### SD NAND: the main image, over USB DFU
+### SD NAND: an image, over USB DFU
 
 ```
-make flash-sd              # output/main/images/sdcard.img
-make flash-sd IMAGE=<file> # any other image
+make flash-sd IMAGE=<path to tess-os>/output/images/sdcard.img
 ```
 
 `flash-sd.sh` starts the flasher's U-Boot alone over FEL. Without a boot
 script to run, U-Boot enters USB DFU (`board/tess/uboot/tess-flasher.env`),
 and dfu-util sends the image to the `sdcard` entity, the whole SD NAND.
-The main image writes U-Boot, its environment (back to the defaults) and
-both root filesystem slots, the first 196 MiB; the data partition behind
-it is not touched, the main image finds it again on its first boot (and
-reboots once). When dfu-util detaches, U-Boot resets the board, which
-boots the new image (release SW2 first).
+When dfu-util detaches, U-Boot resets the board, which boots the new
+image (release SW2 first). The tess-os README describes what its image
+writes and keeps.
 
 ### ESP32-C3: the flasher image
 
@@ -207,67 +156,28 @@ dd if=/dev/zero of=/dev/mmcblk0 bs=512 seek=16 count=2 conv=fsync
 reboot
 ```
 
-## WiFi
-
-The WiFi configuration is `/etc/wpa_supplicant/wpa_supplicant.conf`, on
-the data partition. On the first boot it is a copy of the one in the
-image (`board/tess/rootfs_overlay/common/etc/wpa_supplicant/`, ignored by git:
-it holds your credentials), if that exists. To change it on the board:
-
-```
-{ echo "ctrl_interface=/var/run/wpa_supplicant"
-  wpa_passphrase "<ssid>" "<password>" | grep -v '#psk'
-} > /etc/wpa_supplicant/wpa_supplicant.conf
-```
-
-and reboot. The country is set in `/etc/default/regdomain` (in the image).
-
-## Updates
-
-Copy the bundle to the data partition and install it with RAUC; it
-writes the other root filesystem slot and makes U-Boot boot it next:
-
-```
-scp output/main/images/tess-update.raucb root@<board>:/data/
-rauc install /data/tess-update.raucb
-reboot
-```
-
-`rauc status` shows the slots and which one is booted. Bundles are
-signed with the development key in `board/tess/rauc/` unless
-`TESS_RAUC_KEY` and `TESS_RAUC_CERT` are set; see `board/tess/rauc/README`.
-
-## Display
-
-The Raspberry Pi 7" DSI display (with touchscreen) is not in the board
-device tree but in the `rpi-7inch-dsi-overlay.dtb` overlay
-(`board/tess/rpi-7inch-dsi-overlay.dts`). The main image loads
-it with `fdtoverlays` in `/boot/extlinux/extlinux.conf`: remove that line
-from `board/tess/rootfs_overlay/main` when no display is connected. The flasher
-has no display support. The overlay source is a `.dts`, not a
-`.dtso`, so that the kernel builds it with its single-`.dtb` rule (see the
-comment in the file).
-
 ## ESP32-C3 firmware
 
 The ESP32-C3 runs the esp-hosted-linux `network_adapter` firmware, built
 by `make esp32c3` (`esp32c3/build.sh`, ESP-IDF in Docker) into
 `output/esp32c3/`, not tracked in git; the flasher build copies it to
 `/lib/firmware/esp-hosted/` in the flasher image
-(`board/tess/post-build-flasher.sh`), where `tess-install` takes it from. The host driver (Buildroot's `esp-hosted`
-package) refuses a firmware of another version, so both must come from
-the same esp-hosted-linux commit; `build.sh` reads that commit from the
-package in `buildroot/`.
+(`board/tess/post-build.sh`), where `tess-install` takes it from. The
+host driver (Buildroot's `esp-hosted` package, in the main image) refuses
+a firmware of another version, so both must come from the same
+esp-hosted-linux commit; `build.sh` asks Buildroot in `buildroot/` for
+that commit.
 
 Status: the firmware on the boards is NG-1.0.6.0.15, built from
 esp-hosted-linux 2a8772c (the version the old Buildroot fork pinned).
 Buildroot master now ships esp-hosted-linux 54d5367 (NG-1.0.6.0.23), so
 the ESP32-C3 has to be reflashed with a firmware rebuilt from that
-commit (`build.sh`, then the flasher) before WiFi works with the main
-image. The former firmware patch 0002 (report a host disconnect right
-away) is dropped: 54d5367 tags the disconnect event with the generation
-of the disconnect command instead, so the host no longer drops the late
-event. To confirm on the board: `wpa_cli disconnect` followed by a
-reconnect must not loop on authentication timeouts.
+commit (`make esp32c3`, `make`, then `make flash` and `tess-install`)
+before WiFi works with the main image. The former firmware patch 0002
+(report a host disconnect right away) is dropped: 54d5367 tags the
+disconnect event with the generation of the disconnect command instead,
+so the host no longer drops the late event. To confirm on the board:
+`wpa_cli disconnect` followed by a reconnect must not loop on
+authentication timeouts.
 
 See `board/tess/PLAN.md` for the hardware notes and the design history.

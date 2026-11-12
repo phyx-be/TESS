@@ -1,4 +1,2 @@
 # Build output directories
 /output*/
-# Per-developer WiFi credentials copied into the image (see README.md)
-/board/tess/rootfs_overlay/common/etc/wpa_supplicant/
