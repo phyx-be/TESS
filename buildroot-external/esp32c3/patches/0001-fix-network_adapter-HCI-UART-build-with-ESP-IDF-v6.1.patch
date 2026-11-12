@@ -12,6 +12,9 @@ ESP32-C3 with CONFIG_BT_CTRL_HCI_MODE_UART_H4 fails with:
   'reserve_sibling'
 
 Use the new API, like ESP-IDF's own hci_driver_uart_dma.c does.
+
+Upstream: https://github.com/espressif/esp-hosted-linux/pull/8
+Signed-off-by: Bert Outtier <outtierbert@gmail.com>
 ---
  esp/esp_driver/network_adapter/main/slave_bt.c | 7 +++++++
  1 file changed, 7 insertions(+)

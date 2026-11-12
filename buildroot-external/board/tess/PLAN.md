@@ -92,7 +92,8 @@ flash).
   The host driver registers no HCI device in that mode; attach with
   `btattach -B /dev/ttyS2 -P h4 -S 500000`.
 - The HCI UART code did not build with ESP-IDF v6.1 (GDMA API change):
-  fixed by `esp32c3/patches/0001-*.patch`, to be sent upstream.
+  fixed by `esp32c3/patches/0001-*.patch`, sent upstream as
+  https://github.com/espressif/esp-hosted-linux/pull/8 (2026-11-12).
 - No prebuilt firmware binaries in the repo or the releases.
 - The driver supports in-band firmware update over the transport with
   the `ota_file=` module parameter (`docs/guides/ota.md`). This is the
