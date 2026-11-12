@@ -4,9 +4,8 @@
  * panel, display MCU (power, reset, backlight PWM) and Goodix GT911
  * touchscreen on I2C2.
  *
- * Needs a base device tree built with symbols (-@). Applied by U-Boot:
- * extlinux.conf "fdtoverlays" in the main image, "fdt apply" in the
- * flasher boot script.
+ * Main image only. Needs a base device tree built with symbols (-@).
+ * Applied by U-Boot: extlinux.conf "fdtoverlays".
  *
  * Named .dts, not .dtso, so that the kernel builds it through its %.dtb
  * rule: a single .dtbo target in arch/arm/boot/dts (where Buildroot

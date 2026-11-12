@@ -230,7 +230,7 @@ device tree but in the `rpi-7inch-dsi-overlay.dtb` overlay
 (`board/tess/rpi-7inch-dsi-overlay.dts`). The main image loads
 it with `fdtoverlays` in `/boot/extlinux/extlinux.conf`: remove that line
 from `board/tess/rootfs_overlay/main` when no display is connected. The flasher
-applies it in its boot script. The overlay source is a `.dts`, not a
+has no display support. The overlay source is a `.dts`, not a
 `.dtso`, so that the kernel builds it with its single-`.dtb` rule (see the
 comment in the file).
 
