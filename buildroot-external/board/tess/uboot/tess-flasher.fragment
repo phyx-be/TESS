@@ -3,7 +3,7 @@
 # NAND from the host when U-Boot is started standalone (see tess-flasher.env
 # and flash-sd.sh)
 CONFIG_USB_MUSB_GADGET=y
+# the download gadget; DFU_OVER_USB (f_dfu) follows from it with CMD_DFU
 CONFIG_USB_GADGET_DOWNLOAD=y
-CONFIG_USB_FUNCTION_DFU=y
 CONFIG_CMD_DFU=y
 CONFIG_DFU_MMC=y
