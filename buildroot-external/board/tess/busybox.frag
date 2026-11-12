@@ -1,3 +1,6 @@
+# Main image only (the flasher uses Buildroot's default busybox): xz/gz
+# archives, ifplugd for the WiFi link, nc, pgrep/pkill, stat, timeout,
+# wget over TLS
 CONFIG_FEATURE_SEAMLESS_XZ=y
 CONFIG_FEATURE_SEAMLESS_GZ=y
 CONFIG_FEATURE_TAR_AUTODETECT=y
