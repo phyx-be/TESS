@@ -1,4 +1,4 @@
-From 8893339e42ada047eaa75bc2258e00214a9300c5 Mon Sep 17 00:00:00 2001
+From 79183b2f255888c729e3c1d1db55a5fcdda97217 Mon Sep 17 00:00:00 2001
 From: Bert Outtier <outtierbert@gmail.com>
 Date: Wed, 7 Oct 2026 13:52:54 +0200
 Subject: [PATCH] espflash: accept explicitly given ports that are not
@@ -10,36 +10,60 @@ on-chip UARTs of an Allwinner T113 board (/dev/ttyS4), so
   espflash write-bin --port /dev/ttyS4 ...
 
 fails with serial_not_found although the port exists. When the port
-given on the command line or in the configuration exists but is not
-enumerated, use it with an unknown port type instead.
+given on the command line or in the configuration is a character device
+but is not enumerated, use it with an unknown port type instead, and log
+that: without USB device information, the USB-Serial-JTAG handling and
+the PID-based resets are off. Other paths keep failing as not found.
+
+This is the change of the upstream pull request after review, without
+its unit tests.
 
 Upstream: https://github.com/esp-rs/espflash/pull/1122
 Signed-off-by: Bert Outtier <outtierbert@gmail.com>
 ---
- espflash/src/cli/serial.rs | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ espflash/src/cli/serial.rs | 29 ++++++++++++++++++++++++++++-
+ 1 file changed, 28 insertions(+), 1 deletion(-)
 
 diff --git a/espflash/src/cli/serial.rs b/espflash/src/cli/serial.rs
-index 6d88d24..f19537c 100644
+index b8359706..4b0c1d62 100644
 --- a/espflash/src/cli/serial.rs
 +++ b/espflash/src/cli/serial.rs
-@@ -103,6 +103,16 @@ fn find_serial_port(ports: &[SerialPortInfo], name: &str) -> Result<SerialPortIn
+@@ -104,7 +104,34 @@ fn find_serial_port(ports: &[SerialPortInfo], name: &str) -> Result<SerialPortIn
      if let Some(port) = port_info {
          Ok(port.to_owned())
      } else {
+-        Err(Error::SerialNotFound(name.to_string()))
 +        // An explicitly given port that exists but is not enumerated, e.g. an
 +        // on-chip UART of an embedded Linux board: use it as it is.
-+        // canonicalize() above already failed if it does not exist.
++        // canonicalize() above already failed if it does not exist, and only
++        // a character device can be a serial port: other paths (directories,
++        // regular files) keep failing as not found.
++        //
++        // Without USB device information, the USB-Serial-JTAG handling is
++        // disabled and the classic DTR/RTS reset is used, so say so: a USB
++        // port that enumeration missed would otherwise fail to reset with
++        // nothing pointing at the cause.
 +        #[cfg(not(target_os = "windows"))]
-+        return Ok(SerialPortInfo {
-+            port_name: name.to_string(),
-+            port_type: SerialPortType::Unknown,
-+        });
++        {
++            use std::os::unix::fs::FileTypeExt;
++
++            if !fs::metadata(name.as_ref())?.file_type().is_char_device() {
++                return Err(Error::SerialNotFound(name.to_string()));
++            }
++            info!("Serial port {name} was not detected; using it without USB device information");
++            Ok(SerialPortInfo {
++                port_name: name.to_string(),
++                port_type: SerialPortType::Unknown,
++            })
++        }
 +
 +        #[cfg(target_os = "windows")]
-         Err(Error::SerialNotFound(name.to_string()))
++        {
++            Err(Error::SerialNotFound(name.to_string()))
++        }
      }
  }
+ 
 -- 
 2.53.0
 
