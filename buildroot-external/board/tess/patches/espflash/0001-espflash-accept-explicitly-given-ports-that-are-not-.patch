@@ -18,7 +18,7 @@ the PID-based resets are off. Other paths keep failing as not found.
 This is the change of the upstream pull request after review, without
 its unit tests.
 
-Upstream: https://github.com/esp-rs/espflash/pull/1122
+Upstream: https://github.com/esp-rs/espflash/commit/95d83804c4 (merged, esp-rs/espflash#1122)
 Signed-off-by: Bert Outtier <outtierbert@gmail.com>
 ---
  espflash/src/cli/serial.rs | 29 ++++++++++++++++++++++++++++-
