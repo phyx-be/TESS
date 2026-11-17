@@ -7,3 +7,13 @@ CONFIG_USB_MUSB_GADGET=y
 CONFIG_USB_GADGET_DOWNLOAD=y
 CONFIG_CMD_DFU=y
 CONFIG_DFU_MMC=y
+# DFU writes through an 8 MiB buffer (SYS_DFU_DATA_BUF_SIZE), which does not
+# fit the default 2.1 MiB malloc pool ("Could not memalign 0x800000 bytes")
+CONFIG_SYS_MALLOC_LEN=0x2000000
+# The sunxi MUSB gadget is probed by usb_ether_init() in board_late_init
+# (the USB Ethernet gadget, only registered when a network command uses it);
+# without it nothing initializes the controller ("Controller uninitialized",
+# g_dnl_register error -6). On sunxi it defaults to y with USB_MUSB_GADGET,
+# but not when the gadget is enabled from a fragment. DM_USB_GADGET is no
+# alternative: the sunxi MUSB glue only registers a gadget without it.
+CONFIG_USB_ETHER=y

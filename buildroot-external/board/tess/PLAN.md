@@ -9,8 +9,8 @@ top of the Buildroot branch `phyxbe-tess` that adds the board upstream
 (esp-hosted-linux 54d5367, firmware version NG-1.0.6.0.23): the ESP32-C3
 firmware must be rebuilt from that commit, see README.md.
 
-Status (2026-11-12): the flasher image flashes the ESP32-C3; the SD NAND
-is written from the host over USB DFU (to be tested on the board). With
+Status (2026-11-17): the flasher image flashes the ESP32-C3; the SD NAND
+is written from the host over USB DFU (tested on the board). With
 this firmware, WiFi over esp-hosted works on the board (WPA2, DHCP,
 internet, 12 Mbit/s, 2026-10-14) and BLE over UART2 (btattach,
 bluetoothctl LE scan).
@@ -197,7 +197,6 @@ sunxi-fel, it flashes the ESP32-C3 over UART4.
   firmware version does not match (it refuses normal operation on a
   mismatch). OTA only updates the application: bootloader and partition
   table changes still need the flasher.
-- Test the USB DFU transfer on the board.
 - Upstream: esp-hosted-linux HCI UART fix for ESP-IDF v6.1 (pull request
   8); Buildroot `python-esptool` 5.x misses its `rich_click`/`click`
   dependencies.
@@ -219,3 +218,16 @@ sunxi-fel, it flashes the ESP32-C3 over UART4.
    `flash-sd.sh` drives sunxi-fel and dfu-util. Started with the flasher's
    boot script, it boots the flasher Linux, which only flashes the
    ESP32-C3.
+   Tested on a board 2026-11-17: `make flash-sd` writes a 205 MB image
+   in 3.5 minutes; `make flash` and `tess-install` reflash the ESP32-C3
+   (NG-1.0.6.0.23). Fixed on the way: the DFU buffer (8 MiB) did not fit
+   U-Boot's 2.1 MiB malloc pool (SYS_MALLOC_LEN 32 MiB); nothing probed
+   the MUSB, as USB_ETHER (whose board_late_init probes it, default y on
+   sunxi) stays off when the gadget is enabled from a fragment
+   (DM_USB_GADGET does not work: the sunxi glue registers its gadget only
+   without it); dfu-util exits non-zero after a complete download because
+   U-Boot resets the board on detach (flash-sd.sh checks its output); the
+   host needs a udev rule for 1f3a:1010 as well as 1f3a:efe8 (README.md);
+   `esp32c3-flash` hung the CPU (RCU stall in dw8250_set_termios) with
+   `stty` on UART4 while the ESP was still running after espflash: the
+   ESP is now held in reset while UART4 changes speed.

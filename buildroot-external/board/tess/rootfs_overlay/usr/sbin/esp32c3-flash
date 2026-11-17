@@ -66,10 +66,15 @@ espflash write-bin --chip esp32c3 --port "${PORT}" --baud "${BAUD}" \
 
 # 3. Normal boot, show the boot log
 echo "Starting firmware"
+# Hold the ESP in reset, so that its UART is quiet, while UART4 changes
+# speed: changing the settings of the DesignWare UART while it receives can
+# hang the CPU (2026-11-17: RCU stall in dw8250_set_termios from this stty,
+# the ESP still running after espflash)
+set_lines 1 0
+usleep 100000
 stty -F "${PORT}" 115200 raw -echo
 cat "${PORT}" > "${LOG}" &
 CAT_PID=$!
-set_lines 1 0
 usleep 100000
 set_lines 1 1
 sleep 3

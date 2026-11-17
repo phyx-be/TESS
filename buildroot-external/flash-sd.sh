@@ -49,10 +49,22 @@ echo "Waiting for the USB DFU device"
 i=0
 until "${DFU}" -l 2>/dev/null | grep -q "\[${USB_ID}\].*name=\"sdcard\""; do
 	i=$((i + 1))
-	[ "${i}" -lt 30 ] || die "no USB DFU device after 30 s (check the serial console)"
+	if [ "${i}" -ge 30 ]; then
+		if "${DFU}" -l 2>&1 | grep -q "Cannot open DFU device ${USB_ID}"; then
+			die "no access to the USB DFU device ${USB_ID}: add a udev rule for it (see README.md, \"USB access\")"
+		fi
+		die "no USB DFU device after 30 s (check the serial console)"
+	fi
 	sleep 1
 done
 
 echo "Writing ${IMG} (${SIZE} bytes) to the SD NAND"
-"${DFU}" -d "${USB_ID}" -a sdcard -R -D "${IMG}"
+# U-Boot resets the board as soon as dfu-util detaches, so dfu-util's own USB
+# reset (-R) fails and it exits non-zero after a complete download: check
+# its output instead of its exit code
+LOG=$(mktemp)
+trap 'rm -f "${LOG}"' EXIT
+"${DFU}" -d "${USB_ID}" -a sdcard -R -D "${IMG}" 2>&1 | tee "${LOG}" || true
+grep -q "^Download done" "${LOG}" && grep -q "^Done!" "${LOG}" ||
+	die "the download failed, see the dfu-util output above"
 echo "Done: the board resets and boots the new image."

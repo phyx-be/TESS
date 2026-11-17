@@ -101,6 +101,20 @@ picocom /dev/ttyACM0
 ModemManager probes the port once when it appears, which can show a
 "Login incorrect" on the console.
 
+## USB access
+
+`sunxi-fel` and `dfu-util` talk to the board over USB, as your user: allow
+the Allwinner FEL device (`1f3a:efe8`, the boot ROM) and the USB DFU
+device of U-Boot (`1f3a:1010`) with a udev rule, once per host:
+
+```
+sudo tee /etc/udev/rules.d/99-allwinner-fel.rules <<'RULES'
+SUBSYSTEM=="usb", ATTRS{idVendor}=="1f3a", ATTRS{idProduct}=="efe8", MODE="0666"
+SUBSYSTEM=="usb", ATTRS{idVendor}=="1f3a", ATTRS{idProduct}=="1010", MODE="0666"
+RULES
+sudo udevadm control --reload && sudo udevadm trigger
+```
+
 ## Installing over USB (FEL)
 
 Both steps start from the USB bootloader (FEL) of the T113:
