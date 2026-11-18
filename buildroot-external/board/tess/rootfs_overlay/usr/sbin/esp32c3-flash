@@ -60,9 +60,14 @@ cd "${FW_DIR}" || die "cannot enter ${FW_DIR}"
 [ -f VERSION ] && cat VERSION
 
 echo "Writing firmware"
+# Through a pipe: espflash's progress bar, redrawn for every block, flooded
+# the serial console, and it is hidden when stderr is not a terminal.
+# pipefail keeps espflash's exit status.
+set -o pipefail
 espflash write-bin --chip esp32c3 --port "${PORT}" --baud "${BAUD}" \
 	--before no-reset --after no-reset --non-interactive \
-	0x0 "${FW}" || die "espflash write-bin failed"
+	0x0 "${FW}" 2>&1 | cat || die "espflash write-bin failed"
+set +o pipefail
 
 # 3. Normal boot, show the boot log
 echo "Starting firmware"

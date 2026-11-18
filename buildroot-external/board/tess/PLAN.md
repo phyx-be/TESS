@@ -216,8 +216,17 @@ sunxi-fel, it flashes the ESP32-C3 over UART4.
 - Upstream: esp-hosted-linux HCI UART fix for ESP-IDF v6.1 (pull request
   8); Buildroot `python-esptool` 5.x misses its `rich_click`/`click`
   dependencies.
-- Flasher: `seedrng` cannot write `/var/lib/seedrng` on the read-only
-  root (harmless warning); espflash's progress bar floods the console.
+- ~~Flasher: `seedrng` cannot write `/var/lib/seedrng` on the read-only
+  root (harmless warning); espflash's progress bar floods the console.~~
+  Done 2026-11-18: the flasher leaves out urandom-scripts
+  (`# BR2_PACKAGE_URANDOM_SCRIPTS is not set`: it boots once over FEL from
+  a read-only squashfs, there is no seed to keep), and `esp32c3-flash`
+  pipes espflash through `cat` (with `pipefail`): indicatif hides the
+  progress bar when stderr is not a terminal, espflash's log lines stay.
+  Tested on tess-43c0: no seedrng message at boot, `esp32c3-flash` prints
+  the chip information, "Binary successfully written to flash!" and the
+  ESP boot log, exit status 0; the system on the SD NAND boots afterwards
+  with WiFi and BLE.
 
 ## 7. Decisions
 
