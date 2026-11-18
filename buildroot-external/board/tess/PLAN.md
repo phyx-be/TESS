@@ -192,6 +192,22 @@ sunxi-fel, it flashes the ESP32-C3 over UART4.
   (rebuild and reflash the firmware) and the speed of btattach (`-S`) on
   the board together, measure with WiFi active, keep the highest rate
   without HCI errors.
+  - First measurement (2026-11-18, HCI UART at 500000 with RTS/CTS): an
+    L2CAP LE credit based channel (`l2test -s/-r -V le_public -P 128 -I
+    65535 -O 65535 -b 4096`) between the board and the development PC,
+    whose controller is Bluetooth 4.2 (no 2M PHY, LE data length 123
+    bytes; the ESP32-C3 offers 251, 12 buffers of 251 bytes). PC central,
+    Linux default 30-50 ms interval: 17 kB/s. Board peripheral with
+    `conn_min_interval`/`conn_max_interval` 6 in
+    `/sys/kernel/debug/bluetooth/hci0/` (it asks the central for 7.5 ms
+    with an L2CAP Connection Parameter Update Request, granted): 24-25
+    kB/s. As the central, the board grants the PC's own request for
+    30-50 ms, so set the interval on the peripheral. 25 kB/s is half of
+    what the UART carries: the PC's controller (123-byte packets, about
+    1.5 per 7.5 ms event) is the limit, not the HCI UART.
+  - Next: repeat with a Bluetooth 5 peer with LE 2M PHY and 251-byte data
+    length (a USB dongle, e.g. RTL8761B based, see TEST-RIG.md). Only
+    such a peer can exceed 50 kB/s and show whether 500000 caps the link.
 - ESP32-C3 firmware update without the flasher: esp-hosted's OTA
   (`ota_file=`). To verify: whether the driver allows OTA while the
   firmware version does not match (it refuses normal operation on a

@@ -114,9 +114,12 @@ Notes:
 - **WiFi**: a dedicated access point with a fixed SSID (configured on
   the board by the test). Tests: connect, DHCP, mDNS, SSH, `iperf3`
   throughput, reconnect after `wpa_cli disconnect`.
-- **BLE**: the PC's adapter (or a USB dongle) scans for the board
-  advertising (`bluetoothctl advertise on` on the board) and connects;
-  later the 2M PHY throughput test (BLE item in PLAN.md).
+- **BLE**: a Bluetooth 5 USB dongle with LE 2M PHY and 251-byte data
+  length (e.g. RTL8761B based) scans for the board advertising
+  (`bluetoothctl advertise on` on the board), connects, and runs the
+  throughput test (`l2test`, BLE item in PLAN.md). The development
+  PC's own Bluetooth 4.2 controller (123-byte packets, 1M PHY only) caps
+  the link at about 25 kB/s, below what the HCI UART carries.
 - **Display**: check that the panel, the display MCU and the touchscreen
   probe (`/dev/fb0`, `/sys/class/backlight`, Goodix at 0x5d on I2C2), draw
   into `/dev/fb0` and read it back. A photodiode taped over a
