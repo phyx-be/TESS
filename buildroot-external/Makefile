@@ -7,7 +7,7 @@
 #                  the flasher (esp32c3/build.sh, ESP-IDF in Docker)
 #   make flash     boot the flasher image over USB (FEL) to flash the
 #                  ESP32-C3, see flash.sh
-#   make flash-sd IMAGE=<file>
+#   make flash-sd <image>
 #                  write an image, e.g. an sdcard.img, to the SD
 #                  NAND over USB: the flasher's U-Boot over FEL, then USB
 #                  DFU, see flash-sd.sh
@@ -33,6 +33,15 @@ endif
 
 BR_MAKE = $(MAKE) -C $(BUILDROOT) BR2_EXTERNAL=$(TESS_DIR)
 
+# make flash-sd <image>: the goals after flash-sd are the image to write,
+# with nothing to make for them
+ifeq ($(firstword $(MAKECMDGOALS)),flash-sd)
+FLASH_SD_IMAGE := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+.PHONY: $(FLASH_SD_IMAGE)
+$(FLASH_SD_IMAGE):
+	@:
+endif
+
 .PHONY: all flasher flash flash-sd esp32c3 help help-buildroot
 
 all: flasher
@@ -56,11 +65,11 @@ flasher:
 # is in FEL, starts the flasher's U-Boot alone, which enters USB DFU, and
 # sends the image with dfu-util
 flash-sd:
-	@if [ -z "$(IMAGE)" ]; then \
-		echo "ERROR: give the image to write: make flash-sd IMAGE=<path to sdcard.img>" >&2; \
+	@if [ $(words $(FLASH_SD_IMAGE)) -ne 1 ]; then \
+		echo "ERROR: give the image to write: make flash-sd <path to sdcard.img>" >&2; \
 		exit 1; \
 	fi
-	$(TESS_DIR)/flash-sd.sh $(abspath $(IMAGE)) $(FLASHER_O)
+	$(TESS_DIR)/flash-sd.sh $(abspath $(FLASH_SD_IMAGE)) $(FLASHER_O)
 
 # fel-enter.sh first checks that the board is in FEL: hold SW2 and press
 # SW1 (RESET) with the USB-C connected, or set TESS_HOST to reboot a
@@ -84,7 +93,7 @@ help:
 	@echo "make                     flasher image (output/flasher/)"
 	@echo "make esp32c3             ESP32-C3 esp-hosted firmware in output/esp32c3/ (ESP-IDF in Docker)"
 	@echo "make flash               boot the flasher image over USB (FEL) to flash the ESP32-C3"
-	@echo "make flash-sd IMAGE=...  write an image to the SD NAND over USB DFU"
+	@echo "make flash-sd <image>    write an image to the SD NAND over USB DFU"
 	@echo "make <target>            Buildroot target for the build in O (default: output/flasher),"
 	@echo "                         e.g. make menuconfig, make linux-rebuild"
 	@echo "make help-buildroot      Buildroot's own help"

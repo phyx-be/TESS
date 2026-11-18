@@ -133,7 +133,7 @@ root (a key in `/root/.ssh/authorized_keys`), set `TESS_HOST` and the make
 targets do it:
 
 ```
-make flash-sd TESS_HOST=tess-43c0.local IMAGE=<path to sdcard.img>
+make flash-sd TESS_HOST=tess-43c0.local <path to sdcard.img>
 ```
 
 `tess-fel` writes Allwinner's "reboot efex" value (0x5aa5a55a) into the
@@ -144,7 +144,7 @@ ROM.
 ### SD NAND: an image, over USB DFU
 
 ```
-make flash-sd IMAGE=<path to sdcard.img>
+make flash-sd <path to sdcard.img>
 ```
 
 `flash-sd.sh` starts the flasher's U-Boot alone over FEL. Without a boot

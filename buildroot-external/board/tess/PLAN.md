@@ -179,7 +179,7 @@ sunxi-fel, it flashes the ESP32-C3 over UART4.
   boots the flasher Linux (`uboot/boot.cmd`); `flash-sd.sh` starts U-Boot
   alone, so it runs `dfu 0 mmc 0` with the whole SD NAND as the raw
   `sdcard` entity, and resets the board when dfu-util detaches.
-- `flash-sd.sh` (`make flash-sd IMAGE=...`) checks that the board is in
+- `flash-sd.sh` (`make flash-sd <image>`) checks that the board is in
   FEL, starts U-Boot, waits for the DFU device and writes the image with
   dfu-util (a host tool of the flasher build, like sunxi-fel).
 
