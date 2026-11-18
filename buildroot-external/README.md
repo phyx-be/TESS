@@ -127,6 +127,20 @@ Both steps start from the USB bootloader (FEL) of the T113:
    ./output/flasher/host/bin/sunxi-fel version
    ```
 
+A running board whose system has `tess-fel` can also reboot into FEL by
+itself: `tess-fel` on the board, or from the host, with SSH access as
+root (a key in `/root/.ssh/authorized_keys`), set `TESS_HOST` and the make
+targets do it:
+
+```
+make flash-sd TESS_HOST=tess-43c0.local IMAGE=<path to sdcard.img>
+```
+
+`tess-fel` writes Allwinner's "reboot efex" value (0x5aa5a55a) into the
+RTC general purpose register 2, which survives the reboot; a U-Boot SPL
+that knows the request clears it and returns to the FEL code of the boot
+ROM.
+
 ### SD NAND: an image, over USB DFU
 
 ```
@@ -156,9 +170,9 @@ tess-install
 
 It flashes the ESP32-C3 firmware over UART4 (`esp32c3-flash`).
 
-If SW2 does not get the board into FEL, erase the U-Boot SPL from a
-system running on the board; the boot ROM then falls back to FEL on the
-next reset:
+If SW2 does not get the board into FEL and the system on the board has
+no `tess-fel`, erase the U-Boot SPL from it; the boot ROM then falls back
+to FEL on the next reset:
 
 ```
 dd if=/dev/zero of=/dev/mmcblk0 bs=512 seek=16 count=2 conv=fsync

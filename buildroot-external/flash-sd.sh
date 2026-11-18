@@ -6,7 +6,8 @@
 # detach, U-Boot resets the board, which boots the new image.
 #
 # The board must be in FEL: connect the USB-C connector, hold SW2 and
-# press SW1 (RESET).
+# press SW1 (RESET); or, with TESS_HOST set, a running board with tess-fel
+# is rebooted into FEL over SSH (fel-enter.sh).
 #
 # Usage, from this external tree:
 #   ./flash-sd.sh <image> [flasher output directory]
@@ -39,8 +40,7 @@ SIZE=$(stat -c %s "${IMG}")
 [ "${SIZE}" -le "${MAX_SIZE}" ] ||
 	die "${IMG} is ${SIZE} bytes, larger than the SD NAND (${MAX_SIZE})"
 
-"${FEL}" version >/dev/null ||
-	die "no Allwinner USB FEL device: connect the USB-C connector, hold SW2 and press SW1 (RESET)"
+"${TESS_DIR}/fel-enter.sh" "${FEL}" || exit 1
 
 echo "Starting U-Boot over FEL"
 "${FEL}" uboot "${UBOOT}"

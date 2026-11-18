@@ -62,17 +62,15 @@ flash-sd:
 	fi
 	$(TESS_DIR)/flash-sd.sh $(abspath $(IMAGE)) $(FLASHER_O)
 
-# sunxi-fel (host-sunxi-tools of the flasher build) first checks that the
-# board is in FEL: hold SW2 and press SW1 (RESET) with the USB-C connected
+# fel-enter.sh first checks that the board is in FEL: hold SW2 and press
+# SW1 (RESET) with the USB-C connected, or set TESS_HOST to reboot a
+# running board with tess-fel into FEL over SSH
 flash:
 	@if [ ! -x $(FLASHER_O)/host/bin/sunxi-fel ]; then \
 		echo "ERROR: $(FLASHER_O)/host/bin/sunxi-fel not found, build the flasher image first (make flasher)" >&2; \
 		exit 1; \
 	fi
-	@if ! $(FLASHER_O)/host/bin/sunxi-fel version; then \
-		echo "ERROR: no Allwinner USB FEL device: connect the USB-C connector, hold SW2 and press SW1 (RESET), see README.md" >&2; \
-		exit 1; \
-	fi
+	@$(TESS_DIR)/fel-enter.sh $(FLASHER_O)/host/bin/sunxi-fel
 	$(TESS_DIR)/flash.sh $(FLASHER_O)
 
 # The firmware must come from the esp-hosted-linux commit of the esp-hosted
