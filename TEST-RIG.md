@@ -83,14 +83,14 @@ Notes:
   (`uhubctl`), or a load switch in VBUS driven by the rig. Power cycles,
   and the power-on and boot time tests.
 - **Reset**: RSTn on the header (above), or the SW1 pads.
-- **FEL**: SW2 pulls the SD NAND clock (SDC0 CLK) low, so that the boot
-  ROM finds no boot medium. Wire the SW2 pad to a rig open drain output:
-  it must only ever pull low, never drive high, or it disturbs the SD
-  NAND. FEL is then: hold SW2, pulse RSTn, release SW2. No need to erase
-  the SPL (`dd ... seek=16`) on the rig.
-- **FEL from software**: a running system that reboots the board into
-  FEL by itself gives a third way, for boards in the field; the rig tests
-  it too.
+- **FEL**: on rev 00 SW2 does not work (it pulls SDC0 CLK low through
+  240 Ω, too weak, see IDEAS.md). Pull SDC0.D0 low instead: a pogo pin on
+  TP4 (bottom side, next to the SD NAND) to a rig open drain output, which
+  must only ever pull low, never drive high. FEL is then: pull TP4 low,
+  pulse RSTn, release TP4 after a second. Never touch TP3: it is +3V3.
+- **FEL from software**: a running board with `tess-fel` reboots into FEL
+  by itself (`TESS_HOST`, see `buildroot-external/README.md`), a third
+  way, for boards in the field; the rig tests it too.
 
 ## Battery and charger
 

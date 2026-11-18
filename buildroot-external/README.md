@@ -170,14 +170,26 @@ tess-install
 
 It flashes the ESP32-C3 firmware over UART4 (`esp32c3-flash`).
 
-If SW2 does not get the board into FEL and the system on the board has
-no `tess-fel`, erase the U-Boot SPL from it; the boot ROM then falls back
-to FEL on the next reset:
+SW2 does not work on rev 00 (it pulls SDC0.CLK low through 240 Ω, too
+weak, see `IDEAS.md`). Other ways into FEL:
 
-```
-dd if=/dev/zero of=/dev/mmcblk0 bs=512 seek=16 count=2 conv=fsync
-reboot
-```
+- A running board with `tess-fel`: `tess-fel`, or `TESS_HOST` (above).
+- A board whose U-Boot SPL cannot be read: the boot ROM falls back to FEL
+  by itself.
+- A running system without `tess-fel`: erase the U-Boot SPL; the boot ROM
+  then falls back to FEL on the next reset:
+
+  ```
+  dd if=/dev/zero of=/dev/mmcblk0 bs=512 seek=16 count=2 conv=fsync
+  reboot
+  ```
+
+- Anything else (e.g. an SPL that hangs): on the bottom side, connect
+  **TP4** (SDC0.D0, next to the SD NAND) to **TP10** (GND, the 1.2 mm
+  pad at the board edge marked GND) with the USB-C unplugged, plug it
+  in, wait 3 seconds and remove the wire. The boot ROM cannot read the
+  SD NAND and enters FEL. **TP3**, next to TP10, is +3V3: never connect
+  it to GND.
 
 ## ESP32-C3 firmware
 

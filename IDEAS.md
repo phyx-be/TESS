@@ -81,3 +81,17 @@ write it (the RTC general purpose registers next to it can, see
 `tess-fel`) and whether it survives a watchdog reset: a running system
 could then pick the medium of its next boot, e.g. to boot a recovery
 system from another medium once.
+
+## A FEL button that works
+
+On rev 00 SW2 connects SDC0.CLK to ground through R40, 240 Ω (ODB++
+netlist): too weak against the T113 driving its clock, so the boot ROM
+still reads the SD NAND and SW2 does not give FEL (2026-10-14 and
+2026-11-18). What does work is holding SDC0.D0 low at power-up or reset:
+a wire from TP4 (SDC0.D0) to TP10 (GND) on the bottom side, next to the
+SD NAND. For the next revision, either SW2 to SDC0.D0 (or CMD) with a
+small resistor, which the SD NAND drives only weakly, or to the T113's own
+FEL pin if the package has it; check that the boot ROM then reads FEL
+(bit 8 of 0x03000024). Rev 00 test points around the SD NAND: TP4 D0,
+TP5 D1, TP6 D2, TP7 D3, TP8 CMD, TP9 CLK; TP3 is +3V3 and TP10 GND (the
+two 1.2 mm pads at the board edge).
