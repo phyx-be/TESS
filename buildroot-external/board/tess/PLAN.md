@@ -208,11 +208,15 @@ sunxi-fel, it flashes the ESP32-C3 over UART4.
   - Next: repeat with a Bluetooth 5 peer with LE 2M PHY and 251-byte data
     length (a USB dongle, e.g. RTL8761B based, see TEST-RIG.md). Only
     such a peer can exceed 50 kB/s and show whether 500000 caps the link.
-- ESP32-C3 firmware update without the flasher: esp-hosted's OTA
-  (`ota_file=`). To verify: whether the driver allows OTA while the
-  firmware version does not match (it refuses normal operation on a
-  mismatch). OTA only updates the application: bootloader and partition
-  table changes still need the flasher.
+- ~~ESP32-C3 firmware update without the flasher: esp-hosted's OTA
+  (`ota_file=`).~~ Checked 2026-11-19: the driver rejects the ESP's
+  boot-up event when the firmware version differs from its own, before
+  it starts an OTA, so OTA cannot bring a new version. Instead, a system
+  on the board can carry the images of `make esp32c3` (the separate ones,
+  with `flash_args`) and write them over UART4 with the ESP ROM loader's
+  protocol when they change: tested with a small Python implementation
+  (pyserial, gpiod), about 25 s for the application, per image only when
+  its MD5 differs, NVS left alone.
 - Upstream: esp-hosted-linux HCI UART fix for ESP-IDF v6.1 (pull request
   8); Buildroot `python-esptool` 5.x misses its `rich_click`/`click`
   dependencies.
