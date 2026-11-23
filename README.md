@@ -15,7 +15,7 @@ TESS is built around the **Allwinner T113-S3**. This SoC has two Arm Cortex-A7 c
 - **4-lane MIPI DSI connector** (22-pin, 0.5 mm pitch). Fits the Raspberry Pi 22-pin DSI cable, so the new Raspberry Pi touch displays work out of the box. Touch runs over the I²C lines in the same cable.
 - **ESP32-C3-MINI-1 module** for basic 2.4 GHz Wi-Fi and Bluetooth LE. It connects to the T113 over SPI and UART, and the T113 can update the ESP32-C3 firmware by itself.
 - **USB-C** for power and data (USB 2.0 device / OTG)
-- **LiPo charger** (ETA6005) with a switchable charge current: **450 mA** by default, or **~1.2 A** for larger batteries
+- **LiPo charger** (ETA6003) with a switchable charge current: **450 mA** by default, or **~1.2 A** for larger batteries
 - **Feather pinout with 2 extra pins on each side.** These add a **second USB port** (USB1 D+/D−) and an **extra hardware UART** (UART3).
 - **Audio/video expansion header**, 2 × 5 pins at 1.27 mm pitch: headphone L/R, line in L/R, differential mic in, CVBS out and CVBS in
 - **3 user LEDs** controlled by software, plus **1 charge-status LED** driven by the charger
@@ -134,7 +134,7 @@ When both are connected, the board runs from USB and charges the battery at the 
 
 ### Charge current: standard or fast
 
-The ETA6005 charger has two charge-current settings, and the T113 chooses between them using pin **`PG13` (Fast Charge)**:
+The ETA6003 charger has two charge-current settings, and the T113 chooses between them using pin **`PG13` (Fast Charge)**:
 
 | `PG13` state | Charge current | Use for |
 |---|---|---|
