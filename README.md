@@ -28,7 +28,7 @@ TESS is built around the **Allwinner T113-S3**. This SoC has two Arm Cortex-A7 c
 
 
 ## Software
-Follow the development of our [buildroot Linux.](https://github.com/phyx-be/buildroot-tess)
+Follow the development of our Buildroot Linux in the [`phyxbe-tess` branch](https://github.com/phyx-be/buildroot-tess/tree/phyxbe-tess) of our Buildroot fork, [phyx-be/buildroot-tess](https://github.com/phyx-be/buildroot-tess).
 
 ## Blockdiagram
 TESS is designed to be a breakout board for the Allwinner T113-S3 with limited features on the board but maximal flexibility.
