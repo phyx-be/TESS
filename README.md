@@ -138,13 +138,13 @@ The ETA6003 charger has two charge-current settings, and the T113 chooses betwee
 
 | `PG13` state | Charge current | Use for |
 |---|---|---|
-| Input / high-impedance (**default**) | **~450 mA** | Small batteries, roughly 500 mAh and up |
-| Driven **low** | **~1.2 A** | Large batteries, roughly 1200 mAh and up |
+| Input or driven **low** (**default**) | **~450 mA** | Small batteries, roughly 500 mAh and up |
+| Driven **high** | **~1.2 A** | Large batteries, roughly 1200 mAh and up |
 
-The default is the safe, low setting, so any common LiPo can be connected. If you use a large battery, switch to fast charging in software so it charges in a reasonable time.
+`PG13` drives the gate of a small N-channel MOSFET that pulls the charger's USB_DET pin low to select the fast setting. A 100 kΩ pull-down on the gate keeps the MOSFET off while `PG13` is an input, so the board always starts in the safe, low setting, also before Linux has booted. Any common LiPo can therefore be connected. If you use a large battery, switch to fast charging in software so it charges in a reasonable time.
 
 > [!CAUTION]
-> To go back to standard charging, set `PG13` back to an **input**. **Never drive `PG13` high.**
+> To go back to standard charging, drive `PG13` low or set it back to an input.
 > As a rule of thumb, keep the charge current at or below 1C. Don't use fast charging with batteries under about 1200 mAh.
 
 ### Charge status
@@ -154,9 +154,12 @@ The default is the safe, low setting, so any common LiPo can be connected. If yo
   - **Off:** charging done, or no battery connected
 - Software can read the same signal on **`PG12` (Battery Charger Status)**. It is low while charging.
 
+> [!NOTE]
+> The charge LED is powered from the 3.3 V rail. When the board is switched off with the **EN** pin, the battery keeps charging but the LED stays **off**.
+
 ### Turning the board off
 
-Pull the **EN** pin to GND, for example with a slide switch between EN and GND. This turns off the 3.3 V and core regulators and shuts down the board. The charger stays active, so the battery still charges over USB while the board is off.
+Pull the **EN** pin to GND, for example with a slide switch between EN and GND. This turns off the 3.3 V and core regulators and shuts down the board. The charger stays active, so the battery still charges over USB while the board is off. The charge LED stays dark in that state, because it runs from the 3.3 V rail.
 
 ### Power budget
 
@@ -278,7 +281,7 @@ TESS has **four LEDs**:
 | **LED 0** | Software | `PG14` | User LED. Active low: drive the pin low to turn it on. |
 | **LED 1** | Software | `PE9` | User LED. Active low. |
 | **LED 2** | Software | `PE8` | User LED. Active low. |
-| **CHG** | Battery charger | – (status readable on `PG12`) | On while charging, off when done or with no battery |
+| **CHG** | Battery charger | – (status readable on `PG12`) | On while charging, off when done or with no battery. Needs the 3.3 V rail, so it stays off while EN is low |
 
 The three user LEDs are free for your own use: heartbeat, Wi-Fi status, µSD activity, and so on. In Linux they are normally set up as `gpio-leds` in the device tree, so you can control them from `/sys/class/leds/`.
 
